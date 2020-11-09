@@ -12,4 +12,5 @@ from SingleMuonTriggerSelection import SingleMuonTriggerSelection
 from JetSelection import JetSelection
 from WbosonReconstruction import WbosonReconstruction
 from MetFilter import MetFilter
+from WbGen import WbGen
 

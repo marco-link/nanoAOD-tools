@@ -1,0 +1,10 @@
+
+# special b charge tagger variables
+drop global_*
+drop csv_*
+drop cpf_*
+drop npf_*
+drop sv_*
+drop length_*
+drop muon_*
+drop electron_*
