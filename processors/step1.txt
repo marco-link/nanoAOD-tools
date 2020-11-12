@@ -1,3 +1,14 @@
 
-# trigger information
-drop HLT_*
+# trigger information and flags
+drop TrigObj_*
+drop Flag_*
+
+# unused particles
+drop Photon_*
+drop Tau_*
+
+# unused objects
+drop SV_*
+drop PV_*
+drop IsoTrack_*
+

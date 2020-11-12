@@ -8,3 +8,4 @@ drop sv_*
 drop length_*
 drop muon_*
 drop electron_*
+drop jetorigin_*
