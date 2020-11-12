@@ -104,7 +104,7 @@ See `python processors/WbWbX.py -h` for more options.
 - [ ] particle selections/filters
 - [ ] additional weights calculation
 - [ ] scale factor calculation
-- [ ] Jet to GenJet matching
+- [x] Jet to GenPart matching
 - [x] Wb generator (signal  only)
 - [x] drop trigger information
 
@@ -120,9 +120,20 @@ See `python processors/WbWbX.py -h` for more options.
 
 - [ ] Event selection
 - [ ] W/Wb reco
-- [ ] add smeared truth
-- [ ] apply binning for asymmetry
+- [x] add smeared truth
+- [x] apply binning for asymmetry
 
 
 ## plot (+ unfolding)
 
+
+
+# The Asymmetry binning
+
+-`bin > 0` onshell
+-`bin < 0` offshell
+
+- `abs(bin)==1` negative charge (bottom quark)
+- `abs(bin)==2` positive charge (anti bottom quark)
+
+- `bin == 0` zero charge

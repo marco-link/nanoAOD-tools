@@ -1,4 +1,8 @@
 
+import numpy
+
+
+
 def status_flag(p, n):
     '''
     To save space, the status flags for each gen particle are not stored as
@@ -97,6 +101,23 @@ def getMassFromPDG(p):
     else:
         m = -1
     return m
+
+
+def getChargeFromPDG(p):
+    charge = 0.
+
+    if abs(p.pdgId) == 2 or abs(p.pdgId) == 4 or abs(p.pdgId) == 6: # up type quarks
+        charge = numpy.sign(p.pdgId) * 0.666
+    elif abs(p.pdgId) == 1 or abs(p.pdgId) == 3 or abs(p.pdgId) == 5: # down type quarks
+        charge = numpy.sign(p.pdgId) * -0.333
+    elif abs(p.pdgId) == 11 or abs(p.pdgId) == 13 or abs(p.pdgId) == 15: # charged leptons
+        charge = -numpy.sign(p.pdgId)
+    elif abs(p.pdgId) == 24: # W boson
+        charge = numpy.sign(p.pdgId)
+
+    return charge
+
+
 
 
 # checks whether in the production chain of a particle (p) up to the incoming particles a particle with pdgId in ids exists

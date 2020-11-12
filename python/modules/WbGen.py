@@ -43,12 +43,13 @@ class WbGenProducer(Module):
         self.out.branch(self.bquarkBranchName + "pt", "F")
         self.out.branch(self.bquarkBranchName + "eta", "F")
         self.out.branch(self.bquarkBranchName + "phi", "F")
-        self.out.branch(self.bquarkBranchName + "id", "I")
+        self.out.branch(self.bquarkBranchName + "pdgId", "I")
+        self.out.branch(self.bquarkBranchName + "Charge", "F")
 
         self.out.branch(self.wdauBranchName + "pt", "F", 2)
         self.out.branch(self.wdauBranchName + "eta", "F", 2)
         self.out.branch(self.wdauBranchName + "phi", "F", 2)
-        self.out.branch(self.wdauBranchName + "id", "I", 2)
+        self.out.branch(self.wdauBranchName + "pdgId", "I", 2)
 
         self.out.branch(self.bquarkjetBranchName + "pt", "F")
         self.out.branch(self.bquarkjetBranchName + "eta", "F")
@@ -79,12 +80,20 @@ class WbGenProducer(Module):
         bquark = None
         bquark_idx = None
 
+        bquarkjet = None
+        bquarkjet_idx = None
+
+        j_idx = -1
+        j_assigned = []
+
         wdau_pt = []
         wdau_eta = []
         wdau_phi = []
         wdau_m = []
         wdau_id = []
         wdau_idx = []
+
+
 
 
         if self.debug:
@@ -167,12 +176,6 @@ class WbGenProducer(Module):
             print len(check_idx)
 
 
-        bquarkjet = None
-        bquarkjet_idx = None
-
-        j_idx = -1
-        j_assigned = []
-
         for j in gen_jets:
 
             j_idx += 1
@@ -202,14 +205,15 @@ class WbGenProducer(Module):
         self.out.fillBranch(self.bquarkBranchName + "pt", bquark.pt)
         self.out.fillBranch(self.bquarkBranchName + "eta", bquark.eta)
         self.out.fillBranch(self.bquarkBranchName + "phi", bquark.phi)
-        self.out.fillBranch(self.bquarkBranchName + "id", bquark.pdgId)
+        self.out.fillBranch(self.bquarkBranchName + "pdgId", bquark.pdgId)
+        self.out.fillBranch(self.bquarkBranchName + "Charge", getChargeFromPDG(bquark))
 
         # fill only if W boson was found
         if len(wdau_id) == 2:
             self.out.fillBranch(self.wdauBranchName + "pt", wdau_pt)
             self.out.fillBranch(self.wdauBranchName + "eta", wdau_eta)
             self.out.fillBranch(self.wdauBranchName + "phi", wdau_phi)
-            self.out.fillBranch(self.wdauBranchName + "id", wdau_id)
+            self.out.fillBranch(self.wdauBranchName + "pdgId", wdau_id)
 
 
         self.out.fillBranch(self.bquarkjetBranchName + "pt", bquarkjet.pt)
@@ -233,8 +237,3 @@ class WbGenProducer(Module):
 
 
         return True
-
-
-# define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
-
-WbGen = lambda: WbGenProducer(dRmax=0.4)

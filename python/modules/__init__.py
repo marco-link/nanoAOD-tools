@@ -12,5 +12,8 @@ from SingleMuonTriggerSelection import SingleMuonTriggerSelection
 from JetSelection import JetSelection
 from WbosonReconstruction import WbosonReconstruction
 from MetFilter import MetFilter
-from WbGen import WbGen
+from WbGen import WbGenProducer
+from JetGenMatch import JetGenMatchProducer
+from AsymBin import AsymBinProducer
+from ChargeSmear import ChargeSmearProducer
 

@@ -77,8 +77,6 @@ step1_analyzerChain = [
 
 #TODO particle selections/filters
 
-#TODO particle selections/filters
-
     #MuonSelection(
         #inputCollection=lambda event: Collection(event, "Muon"),
         #outputName="tightMuons",
@@ -113,13 +111,14 @@ step1_analyzerChain = [
     #),
     #JetSelection(
         #inputCollection=lambda event: Collection(event,"Jet"),
-        #leptonCollectionDRCleaning=lambda event: event.tightMuons,
+        ##leptonCollectionDRCleaning=lambda event: event.tightMuons,
         #jetMinPt=30.,
         #jetMaxEta=4.7,
         #jetId=JetSelection.LOOSE,
         #outputName="selectedJets",
+        #storeKinematics=['pt','eta', 'phi'],
         #globalOptions=globalOptions
-    #)
+    #),
 
 
 
@@ -128,13 +127,18 @@ step1_analyzerChain = [
 
 #TODO scale factor calculation
 
-#TODO Jet to GenJet matching
+
+    # Jet to GenPart matching #TODO switch to selectedJets
+    JetGenMatchProducer(dRmax=0.4,
+                        JetCollection='Jet',
+                        GenCollection='GenPart'
+                        ),
 
 ]
 
 # add Wb generator to signal sample
 if args.isSignal:
-    step1_analyzerChain.append(WbGen())
+    step1_analyzerChain.append(WbGenProducer(dRmax=0.4))
 
 
 
@@ -161,11 +165,6 @@ step2_analyzerChain = [
 # TODO apply btagging WP
 
 # TODO apply b charge tagger
-
-# TODO drop special tagger variables
-
-
-
 
 ]
 
@@ -196,13 +195,23 @@ step3_analyzerChain = [
 
 # TODO W/Wb reco
 
-# TODO add smeared truth
+    # add smeared truth charge
+    ChargeSmearProducer(chargeBranch='Gen_wb_b_Charge',
+                        efficiency=0.66),
 
-# TODO apply binning for asymmetry
-
-
-
-
+    # apply binning for asymmetry
+    AsymBinProducer(massBranch='Gen_wb_mass',
+                    chargeBranch='Gen_wb_b_Charge',
+                    outputName='Evt_GenAsymBin',
+                    mass=172.5,
+                    masswindow=20
+                    ),
+    AsymBinProducer(massBranch='Gen_wb_mass',
+                    chargeBranch='Gen_wb_b_Charge_smeared',
+                    outputName='Evt_smearedGenAsymBin',
+                    mass=172.5,
+                    masswindow=20
+                    ),
 
 ]
 
