@@ -193,7 +193,17 @@ step2 = PostProcessor(
 step3_analyzerChain = [
 
 
-# TODO W/Wb reco
+    # W reco
+    WbosonReconstruction(electronCollectionName = 'Electron',
+                         muonCollectionName = 'Muon',
+                         metName = 'MET',
+                         outputName='Reco_W',
+                         Wmass = 80.385
+                         ),
+
+
+    # Wb reco TODO
+
 
     # add smeared truth charge
     ChargeSmearProducer(chargeBranch='Gen_wb_b_Charge',
@@ -202,13 +212,13 @@ step3_analyzerChain = [
     # apply binning for asymmetry
     AsymBinProducer(massBranch='Gen_wb_mass',
                     chargeBranch='Gen_wb_b_Charge',
-                    outputName='Evt_GenAsymBin',
+                    outputName='Reco_GenAsymBin',
                     mass=172.5,
                     masswindow=20
                     ),
     AsymBinProducer(massBranch='Gen_wb_mass',
                     chargeBranch='Gen_wb_b_Charge_smeared',
-                    outputName='Evt_smearedGenAsymBin',
+                    outputName='Reco_smearedGenAsymBin',
                     mass=172.5,
                     masswindow=20
                     ),
