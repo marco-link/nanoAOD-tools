@@ -104,13 +104,14 @@ See `python processors/WbWbX.py -h` for more options.
 - [ ] particle selections/filters
 - [ ] additional weights calculation
 - [ ] scale factor calculation
-- [x] Jet to GenPart matching
+- [x] Jetcharge from parton flavour
 - [x] Wb generator (signal  only)
 - [x] drop trigger information and more unused variables
 
 
 ## step2
 
+- [x] leptonic W reconstruction
 - [ ] apply btagging WP
 - [ ] apply b charge tagger
 - [x] drop special tagger variables
@@ -119,7 +120,7 @@ See `python processors/WbWbX.py -h` for more options.
 ## step3
 
 - [ ] Event selection
-- [x] W/Wb reco
+- [x] Wb reconstruction
 - [x] add smeared truth
 - [x] apply binning for asymmetry
 

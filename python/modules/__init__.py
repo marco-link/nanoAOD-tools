@@ -14,7 +14,7 @@ from WbosonReconstruction import WbosonReconstruction
 from WbReconstruction import WbReconstruction
 from MetFilter import MetFilter
 from WbGen import WbGenProducer
-from JetGenMatch import JetGenMatchProducer
+from JetGenCharge import JetGenChargeProducer
 from AsymBin import AsymBinProducer
 from ChargeSmear import ChargeSmearProducer
 

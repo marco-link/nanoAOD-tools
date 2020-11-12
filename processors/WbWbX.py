@@ -43,8 +43,22 @@ preskim = {
 
 # TODO Final Event selection
 
-selections = ['nElectron + nMuon == 1',
-              'nJet > 0',
+leptonselection = 'nElectron + nMuon == 1'
+
+selections = [leptonselection,
+              'nJet > 0',# TODO remove this
+
+
+
+
+              #'(nBJet == 1 || nBJet == 2)',
+              #'(nNonBJet == 1 || nNonBJet == 2)',
+
+              #'abs(BJet_eta[0]) < 2.5 && BJet_pt[0] > 25',
+              #'abs(NonBJet_eta[0]) > 2.3',
+              #'(BJet_pt[1] < 50 && NonBJet_pt[1] < 50)',
+              #'m(W, NonBJet[0]) > 140',
+              'Reco_w_pt < 120 && abs(Reco_w_eta) < 4.0',
              ]
 
 selection = ' && '.join(selections)
@@ -136,11 +150,8 @@ step1_analyzerChain = [
 
 
     # Jet to GenPart matching #TODO switch to selectedJets
-    JetGenMatchProducer(dRmax=0.4,
-                        JetCollection='Jet',
-                        GenCollection='GenPart'
+    JetGenChargeProducer(
                         ),
-
 ]
 
 # add Wb generator to signal sample
@@ -168,6 +179,15 @@ step1 = PostProcessor(
 ##############
 
 step2_analyzerChain = [
+    # leptonic W reco
+    WbosonReconstruction(electronCollectionName = 'Electron',
+                         muonCollectionName = 'Muon',
+                         metName = 'MET',
+                         outputName='Reco_w',
+                         Wmass = 80.385
+                         ),
+
+
 
 # TODO apply btagging WP
 
@@ -181,7 +201,7 @@ step2 = PostProcessor(
     args.output[0],
     args.inputFiles,
     postfix='_2',
-    cut='',
+    cut=leptonselection,
     modules=step2_analyzerChain,
     friend=False,
     outputbranchsel='processors/step2.txt',
@@ -198,27 +218,12 @@ step2 = PostProcessor(
 
 
 step3_analyzerChain = [
-
-
-    # W reco
-    WbosonReconstruction(electronCollectionName = 'Electron',
-                         muonCollectionName = 'Muon',
-                         metName = 'MET',
-                         outputName='Reco_w',
-                         Wmass = 80.385
-                         ),
-
-
     # Wb reco
     WbReconstruction(bjetCollectionName = 'Jet', #TODO replace with BJets
                      WbosonCollectionName = 'Reco_w',
                      jetchargeName='GenCharge', #TODO replace with charge from b charge tagger
                      outputName='Reco_wb'),
 
-
-    # add smeared truth charge
-    ChargeSmearProducer(chargeBranch='Gen_wb_b_Charge',
-                        efficiency=0.66),
 
     # apply binning for asymmetry
     AsymBinProducer(massBranch='Reco_wb_mass',
@@ -228,21 +233,30 @@ step3_analyzerChain = [
                     masswindow=masswindow
                     ),
 
-    # generator distributions
-    AsymBinProducer(massBranch='Gen_wb_mass',
-                    chargeBranch='Gen_wb_b_Charge',
-                    outputName='Reco_GenAsymBin',
-                    mass=topmass,
-                    masswindow=masswindow
-                    ),
-    AsymBinProducer(massBranch='Gen_wb_mass',
-                    chargeBranch='Gen_wb_b_Charge_smeared',
-                    outputName='Reco_smearedGenAsymBin',
-                    mass=topmass,
-                    masswindow=masswindow
-                    ),
-
 ]
+
+# generator distributions
+if args.isSignal:
+    # add smeared truth charge
+    step2_analyzerChain.append(ChargeSmearProducer(chargeBranch='Gen_wb_b_Charge', efficiency=0.66))
+
+    # calculate asymmetry for (smeared) generator truth
+    step2_analyzerChain.append(AsymBinProducer(massBranch='Gen_wb_mass',
+                               chargeBranch='Gen_wb_b_Charge',
+                               outputName='Reco_GenAsymBin',
+                               mass=topmass,
+                               masswindow=masswindow
+                               ))
+    step2_analyzerChain.append(AsymBinProducer(massBranch='Gen_wb_mass',
+                               chargeBranch='Gen_wb_b_Charge_smeared',
+                               outputName='Reco_smearedGenAsymBin',
+                               mass=topmass,
+                               masswindow=masswindow
+                               ))
+
+
+
+
 
 
 
