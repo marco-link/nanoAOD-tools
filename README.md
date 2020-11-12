@@ -106,7 +106,7 @@ See `python processors/WbWbX.py -h` for more options.
 - [ ] scale factor calculation
 - [x] Jet to GenPart matching
 - [x] Wb generator (signal  only)
-- [x] drop trigger information
+- [x] drop trigger information and more unused variables
 
 
 ## step2
@@ -119,7 +119,7 @@ See `python processors/WbWbX.py -h` for more options.
 ## step3
 
 - [ ] Event selection
-- [ ] W/Wb reco
+- [x] W/Wb reco
 - [x] add smeared truth
 - [x] apply binning for asymmetry
 

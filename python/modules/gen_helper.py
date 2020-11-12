@@ -107,9 +107,9 @@ def getChargeFromPDG(p):
     charge = 0.
 
     if abs(p.pdgId) == 2 or abs(p.pdgId) == 4 or abs(p.pdgId) == 6: # up type quarks
-        charge = numpy.sign(p.pdgId) * 0.666
+        charge = numpy.sign(p.pdgId) * 0.666666
     elif abs(p.pdgId) == 1 or abs(p.pdgId) == 3 or abs(p.pdgId) == 5: # down type quarks
-        charge = numpy.sign(p.pdgId) * -0.333
+        charge = numpy.sign(p.pdgId) * -0.333333
     elif abs(p.pdgId) == 11 or abs(p.pdgId) == 13 or abs(p.pdgId) == 15: # charged leptons
         charge = -numpy.sign(p.pdgId)
     elif abs(p.pdgId) == 24: # W boson

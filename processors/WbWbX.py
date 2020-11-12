@@ -42,7 +42,12 @@ preskim = {
 
 
 # TODO Final Event selection
-selection = 'nElectron + nMuon == 1'
+
+selections = ['nElectron + nMuon == 1',
+              'nJet > 0',
+             ]
+
+selection = ' && '.join(selections)
 
 
 
@@ -53,7 +58,9 @@ btagWP ={
             2018: 0.5
         }
 
-
+# used for onshell/offshell
+topmass = 172.5
+masswindow = 20
 
 
 
@@ -197,12 +204,16 @@ step3_analyzerChain = [
     WbosonReconstruction(electronCollectionName = 'Electron',
                          muonCollectionName = 'Muon',
                          metName = 'MET',
-                         outputName='Reco_W',
+                         outputName='Reco_w',
                          Wmass = 80.385
                          ),
 
 
-    # Wb reco TODO
+    # Wb reco
+    WbReconstruction(bjetCollectionName = 'Jet', #TODO replace with BJets
+                     WbosonCollectionName = 'Reco_w',
+                     jetchargeName='GenCharge', #TODO replace with charge from b charge tagger
+                     outputName='Reco_wb'),
 
 
     # add smeared truth charge
@@ -210,17 +221,25 @@ step3_analyzerChain = [
                         efficiency=0.66),
 
     # apply binning for asymmetry
+    AsymBinProducer(massBranch='Reco_wb_mass',
+                    chargeBranch='Reco_wb_bjet_charge',
+                    outputName='Reco_AsymBin',
+                    mass=topmass,
+                    masswindow=masswindow
+                    ),
+
+    # generator distributions
     AsymBinProducer(massBranch='Gen_wb_mass',
                     chargeBranch='Gen_wb_b_Charge',
                     outputName='Reco_GenAsymBin',
-                    mass=172.5,
-                    masswindow=20
+                    mass=topmass,
+                    masswindow=masswindow
                     ),
     AsymBinProducer(massBranch='Gen_wb_mass',
                     chargeBranch='Gen_wb_b_Charge_smeared',
                     outputName='Reco_smearedGenAsymBin',
-                    mass=172.5,
-                    masswindow=20
+                    mass=topmass,
+                    masswindow=masswindow
                     ),
 
 ]

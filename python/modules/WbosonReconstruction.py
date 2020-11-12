@@ -14,7 +14,7 @@ class WbosonReconstruction(Module):
                  electronCollectionName = 'Electron',
                  muonCollectionName = 'Muon',
                  metName = 'MET',
-                 outputName='Reco_W',
+                 outputName='Reco_w',
                  Wmass = 80.385,
                  debug=False
                  ):

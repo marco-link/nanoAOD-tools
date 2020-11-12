@@ -11,6 +11,7 @@ from MuonVeto import MuonVeto
 from SingleMuonTriggerSelection import SingleMuonTriggerSelection
 from JetSelection import JetSelection
 from WbosonReconstruction import WbosonReconstruction
+from WbReconstruction import WbReconstruction
 from MetFilter import MetFilter
 from WbGen import WbGenProducer
 from JetGenMatch import JetGenMatchProducer

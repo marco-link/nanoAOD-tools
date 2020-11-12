@@ -69,7 +69,7 @@ class JetGenMatchProducer(Module):
             else:
                 idx.append(-1)
                 pdgid.append(0)
-                charge.append(-9)
+                charge.append(0)
 
 
         self.out.fillBranch(self.MatchIDName, idx)
