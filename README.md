@@ -119,7 +119,7 @@ See `python processors/WbWbX.py -h` for more options.
 
 ## step3
 
-- [ ] Event selection
+- [x] Event selection
 - [x] Wb reconstruction
 - [x] add smeared truth
 - [x] apply binning for asymmetry

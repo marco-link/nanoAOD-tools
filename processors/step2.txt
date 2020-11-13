@@ -1,4 +1,12 @@
 
+# drop origiginal jets
+drop Jet_*
+
+# drop electron and muon (already used for W reconstruction)
+drop Electron_*
+drop Muon_*
+
+
 # special b charge tagger variables
 drop global_*
 drop csv_*

@@ -43,24 +43,16 @@ preskim = {
 
 # TODO Final Event selection
 
-leptonselection = 'nElectron + nMuon == 1'
+leptonselection = 'nElectron + nMuon == 1' # applied before step 2
 
-selections = [leptonselection,
-              'nJet > 0',# TODO remove this
-
-
-
-
-              #'(nBJet == 1 || nBJet == 2)',
-              #'(nNonBJet == 1 || nNonBJet == 2)',
-
-              #'abs(BJet_eta[0]) < 2.5 && BJet_pt[0] > 25',
-              #'abs(NonBJet_eta[0]) > 2.3',
-              #'(BJet_pt[1] < 50 && NonBJet_pt[1] < 50)',
-              #'m(W, NonBJet[0]) > 140',
+# applied before step 3
+selections = ['(nBJet == 1 || (nBJet == 2 && BJet_pt[1] < 50))',
+              '(nNonBJet == 1 || (nNonBJet == 2 && NonBJet_pt[1] < 50))',
+              'abs(BJet_eta[0]) < 2.5 && BJet_pt[0] > 25',
+              'abs(NonBJet_eta[0]) > 2.3',
+              #'m(W, NonBJet[0]) > 140', # applied as EventSkim in step 3
               'Reco_w_pt < 120 && abs(Reco_w_eta) < 4.0',
              ]
-
 selection = ' && '.join(selections)
 
 
@@ -234,6 +226,11 @@ step2 = PostProcessor(
 
 
 step3_analyzerChain = [
+
+    # special event selection mass(W, NonBJet[0]) > 140GeV
+    EventSkim(selection=lambda event: (Object(event, 'Reco_w').p4() + Collection(event, 'NonBJet')[0].p4()).M() > 140),
+
+
     # Wb reco
     WbReconstruction(bjetCollectionName = 'BJet',
                      WbosonCollectionName = 'Reco_w',
