@@ -112,7 +112,7 @@ See `python processors/WbWbX.py -h` for more options.
 ## step2
 
 - [x] leptonic W reconstruction
-- [ ] apply btagging WP
+- [x] apply b tagging WP
 - [ ] apply b charge tagger
 - [x] drop special tagger variables
 

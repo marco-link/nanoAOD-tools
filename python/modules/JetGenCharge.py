@@ -24,8 +24,6 @@ class JetGenChargeProducer(Module):
         self.out.branch(self.chargeName, "F", lenVar='n' + self.JetCollectionName)
 
 
-
-
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
 

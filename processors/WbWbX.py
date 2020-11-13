@@ -64,13 +64,25 @@ selections = [leptonselection,
 selection = ' && '.join(selections)
 
 
+# TODO verify WPs
+looseWP = {
+            2016: 0.06140,
+            2017: 0.05210,
+            2018: 0.04940
+          }
 
-# TODO add correct WP
-btagWP ={
-            2016: 0.5,
-            2017: 0.5,
-            2018: 0.5
-        }
+mediumWP = {
+            2016: 0.30930,
+            2017: 0.30330,
+            2018: 0.27700
+           }
+
+tightWP = {
+            2016: 0.72210,
+            2017: 0.74890,
+            2018: 0.72640
+          }
+
 
 # used for onshell/offshell
 topmass = 172.5
@@ -149,7 +161,7 @@ step1_analyzerChain = [
 #TODO scale factor calculation
 
 
-    # Jet to GenPart matching #TODO switch to selectedJets
+    # Jet charge from partonFlavor #TODO switch to selectedJets
     JetGenChargeProducer(
                         ),
 ]
@@ -188,11 +200,15 @@ step2_analyzerChain = [
                          ),
 
 
-
-# TODO apply btagging WP
-
 # TODO apply b charge tagger
 
+    # apply btagging WP
+    TagJetProducer(JetCollectionName = 'Jet',
+                   TagJetOutputName = 'BJet',
+                   NonTagJetOutputName = 'NonBJet',
+                   storeVariables = ['mass', 'pt', 'eta', 'phi', 'btagDeepFlavB', 'GenCharge'],  #TODO add b charge tagger charge
+                   tagger = 'btagDeepFlavB',
+                   WP = mediumWP[args.year])
 ]
 
 
@@ -219,7 +235,7 @@ step2 = PostProcessor(
 
 step3_analyzerChain = [
     # Wb reco
-    WbReconstruction(bjetCollectionName = 'Jet', #TODO replace with BJets
+    WbReconstruction(bjetCollectionName = 'BJet',
                      WbosonCollectionName = 'Reco_w',
                      jetchargeName='GenCharge', #TODO replace with charge from b charge tagger
                      outputName='Reco_wb'),
