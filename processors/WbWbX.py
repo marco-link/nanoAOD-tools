@@ -41,19 +41,35 @@ preskim = {
           }
 
 
-# TODO Final Event selection
 
 leptonselection = 'nElectron + nMuon == 1' # applied before step 2
+def WNonB_mass(event):
+    jet = Collection(event, 'NonBJet')
+
+    if len(jet)>0:
+        return (Object(event, 'Reco_w').p4() + jet[0].p4()).M()
+    else:
+        return -1
+
 
 # applied before step 3
 selections = ['(nBJet == 1 || (nBJet == 2 && BJet_pt[1] < 50))',
               '(nNonBJet == 1 || (nNonBJet == 2 && NonBJet_pt[1] < 50))',
               'abs(BJet_eta[0]) < 2.5 && BJet_pt[0] > 25',
               'abs(NonBJet_eta[0]) > 2.3',
-              #'m(W, NonBJet[0]) > 140', # applied as EventSkim in step 3
+              'WNonB_mass > 140',
               'Reco_w_pt < 120 && abs(Reco_w_eta) < 4.0',
              ]
 selection = ' && '.join(selections)
+
+
+
+
+
+
+
+
+
 
 
 # TODO verify WPs
@@ -201,6 +217,12 @@ step2_analyzerChain = [
                    storeVariables = ['mass', 'pt', 'eta', 'phi', 'btagDeepFlavB', 'GenCharge'],  #TODO add b charge tagger charge
                    tagger = 'btagDeepFlavB',
                    WP = mediumWP[args.year])
+
+    CalcVar(
+        function = WNonB_mass,
+        outputName = 'WNonB_mass',
+        vartype='F'
+    ),
 ]
 
 
@@ -227,44 +249,46 @@ step2 = PostProcessor(
 
 step3_analyzerChain = [
 
-    # special event selection mass(W, NonBJet[0]) > 140GeV
-    EventSkim(selection=lambda event: (Object(event, 'Reco_w').p4() + Collection(event, 'NonBJet')[0].p4()).M() > 140),
-
-
     # Wb reco
-    WbReconstruction(bjetCollectionName = 'BJet',
-                     WbosonCollectionName = 'Reco_w',
-                     jetchargeName='GenCharge', #TODO replace with charge from b charge tagger
-                     outputName='Reco_wb'),
-
+    WbReconstruction(
+        bjetCollectionName = 'BJet',
+        WbosonCollectionName = 'Reco_w',
+        jetchargeName='GenCharge', #TODO replace with charge from b charge tagger
+        outputName='Reco_wb'
+    ),
 
     # apply binning for asymmetry
-    AsymBinProducer(massBranch='Reco_wb_mass',
-                    chargeBranch='Reco_wb_bjet_charge',
-                    outputName='Reco_AsymBin',
-                    mass=topmass,
-                    masswindow=masswindow
-                    ),
-
+    AsymBinProducer(
+        massBranch='Reco_wb_mass',
+        chargeBranch='Reco_wb_bjet_charge',
+        outputName='Reco_AsymBin',
+        mass=topmass,
+        masswindow=masswindow
+    ),
 ]
 
 # generator distributions
 if args.isSignal:
     # add smeared truth charge
-    step2_analyzerChain.append(ChargeSmearProducer(chargeBranch='Gen_wb_b_Charge', efficiency=0.66))
+    step3_analyzerChain.append(ChargeSmearProducer(
+                                    chargeBranch='Gen_wb_b_Charge',
+                                    efficiency=0.66
+                                ))
 
     # calculate asymmetry for (smeared) generator truth
-    step2_analyzerChain.append(AsymBinProducer(massBranch='Gen_wb_mass',
-                               chargeBranch='Gen_wb_b_Charge',
-                               outputName='Reco_GenAsymBin',
-                               mass=topmass,
-                               masswindow=masswindow
+    step3_analyzerChain.append(AsymBinProducer(
+                                    massBranch='Gen_wb_mass',
+                                    chargeBranch='Gen_wb_b_Charge',
+                                    outputName='Reco_GenAsymBin',
+                                    mass=topmass,
+                                    masswindow=masswindow
                                ))
-    step2_analyzerChain.append(AsymBinProducer(massBranch='Gen_wb_mass',
-                               chargeBranch='Gen_wb_b_Charge_smeared',
-                               outputName='Reco_smearedGenAsymBin',
-                               mass=topmass,
-                               masswindow=masswindow
+    step3_analyzerChain.append(AsymBinProducer(
+                                    massBranch='Gen_wb_mass',
+                                    chargeBranch='Gen_wb_b_Charge_smeared',
+                                    outputName='Reco_smearedGenAsymBin',
+                                    mass=topmass,
+                                    masswindow=masswindow
                                ))
 
 

@@ -6,6 +6,7 @@ if (ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")!=0):
     sys.exit(1)
 
 from EventSkim import EventSkim
+from CalcVar import CalcVar
 from MuonSelection import MuonSelection
 from MuonVeto import MuonVeto
 from SingleMuonTriggerSelection import SingleMuonTriggerSelection
