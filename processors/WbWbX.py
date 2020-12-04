@@ -42,7 +42,21 @@ preskim = {
 
 
 
-leptonselection = 'nElectron + nMuon == 1' # applied before step 2
+minMuonPt = {
+            2016: 25.,
+            2017: 28.,
+            2018: 25.
+            }
+
+
+
+
+
+
+# Final Event selection
+
+leptonselection = 'nElectron + ntightMuon == 1' # applied before step 2
+
 def WNonB_mass(event):
     jet = Collection(event, 'NonBJet')
 
@@ -116,19 +130,25 @@ if not args.isSignal:
 
 step1_analyzerChain = [
 
-#TODO particle selections/filters
+    # particle selections/filters TODO apply filter somewhere
+    MetFilter(
+        globalOptions=globalOptions,
+        outputName="MET_filter"
+    ),
 
-    #MuonSelection(
-        #inputCollection=lambda event: Collection(event, "Muon"),
-        #outputName="tightMuons",
-        #storeKinematics=['pt','eta'],
-        #storeWeights=True,
-        #muonMinPt=minMuonPt[globalOptions["year"]],
-        #triggerMatch=True,
-        #muonID=MuonSelection.TIGHT,
-        #muonIso=MuonSelection.TIGHT,
-        #globalOptions=globalOptions
-    #),
+    MuonSelection(
+        inputCollection=lambda event: Collection(event, 'Muon'),
+        outputName='tightMuon',
+        storeKinematics=['mass', 'pt', 'eta', 'phi'],
+        storeWeights=True,
+        muonMinPt=minMuonPt[globalOptions['year']],
+        triggerMatch=True,
+        muonID=MuonSelection.TIGHT,
+        muonIso=MuonSelection.TIGHT,
+        globalOptions=globalOptions
+    ),
+
+    # TODO Electron selection
 
     #EventSkim(selection=lambda event: event.ntightMuons > 0),
     #SingleMuonTriggerSelection(
@@ -146,20 +166,17 @@ step1_analyzerChain = [
         #muonMaxEta = 2.4,
         #globalOptions=globalOptions
     #),
-    #MetFilter(
-        #globalOptions=globalOptions,
-        #outputName="MET_filter"
-    #),
-    #JetSelection(
-        #inputCollection=lambda event: Collection(event,"Jet"),
-        ##leptonCollectionDRCleaning=lambda event: event.tightMuons,
-        #jetMinPt=30.,
-        #jetMaxEta=4.7,
-        #jetId=JetSelection.LOOSE,
-        #outputName="selectedJets",
-        #storeKinematics=['pt','eta', 'phi'],
-        #globalOptions=globalOptions
-    #),
+
+    JetSelection(
+        inputCollection=lambda event: Collection(event,"Jet"),
+        #leptonCollectionDRCleaning=lambda event: event.tightMuons,
+        jetMinPt=30.,
+        jetMaxEta=4.7,
+        jetId=JetSelection.LOOSE,
+        outputName="selectedJet",
+        storeKinematics=['mass',  'pt','eta', 'phi', 'partonFlavour', 'btagDeepFlavB'],
+        globalOptions=globalOptions
+    ),
 
 
 
@@ -169,9 +186,11 @@ step1_analyzerChain = [
 #TODO scale factor calculation
 
 
-    # Jet charge from partonFlavor #TODO switch to selectedJets
+    # Jet charge from partonFlavor
     JetGenChargeProducer(
-                        ),
+        JetCollectionName='selectedJet',
+        outputname='GenCharge'
+    ),
 ]
 
 # add Wb generator to signal sample
@@ -199,24 +218,27 @@ step1 = PostProcessor(
 ##############
 
 step2_analyzerChain = [
-    # leptonic W reco
-    WbosonReconstruction(electronCollectionName = 'Electron',
-                         muonCollectionName = 'Muon',
-                         metName = 'MET',
-                         outputName='Reco_w',
-                         Wmass = 80.385
-                         ),
 
+    # leptonic W reco
+    WbosonReconstruction(
+        electronCollectionName = 'Electron',
+        muonCollectionName = 'tightMuon',
+        metName = 'MET',
+        outputName='Reco_w',
+        Wmass = 80.385
+    ),
 
 # TODO apply b charge tagger
 
     # apply btagging WP
-    TagJetProducer(JetCollectionName = 'Jet',
-                   TagJetOutputName = 'BJet',
-                   NonTagJetOutputName = 'NonBJet',
-                   storeVariables = ['mass', 'pt', 'eta', 'phi', 'btagDeepFlavB', 'GenCharge'],  #TODO add b charge tagger charge
-                   tagger = 'btagDeepFlavB',
-                   WP = mediumWP[args.year])
+    TagJetProducer(
+        JetCollectionName = 'selectedJet',
+        TagJetOutputName = 'BJet',
+        NonTagJetOutputName = 'NonBJet',
+        storeVariables = ['mass', 'pt', 'eta', 'phi', 'btagDeepFlavB', 'GenCharge'],  #TODO add b charge tagger charge
+        tagger = 'btagDeepFlavB',
+        WP = mediumWP[args.year]
+    ),
 
     CalcVar(
         function = WNonB_mass,

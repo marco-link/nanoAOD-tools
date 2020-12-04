@@ -1,10 +1,10 @@
 
 # drop origiginal jets
-drop Jet_*
+drop selectedJet_*
 
 # drop electron and muon (already used for W reconstruction)
 drop Electron_*
-drop Muon_*
+drop tightMuon_*
 
 
 # special b charge tagger variables

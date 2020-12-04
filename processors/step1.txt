@@ -12,3 +12,6 @@ drop SV_*
 drop PV_*
 drop IsoTrack_*
 
+# remove unfiltered particles
+drop Muon_*
+drop Jet_*
