@@ -67,12 +67,13 @@ def WNonB_mass(event):
 
 
 # applied before step 3
-selections = ['(nBJet == 1 || (nBJet == 2 && BJet_pt[1] < 50))',
-              '(nNonBJet == 1 || (nNonBJet == 2 && NonBJet_pt[1] < 50))',
-              'abs(BJet_eta[0]) < 2.5 && BJet_pt[0] > 25',
-              'abs(NonBJet_eta[0]) > 2.3',
-              'WNonB_mass > 140',
-              'Reco_w_pt < 120 && abs(Reco_w_eta) < 4.0',
+selections = [  'MET_filter',
+                '(nBJet == 1 || (nBJet == 2 && BJet_pt[1] < 50))',
+                '(nNonBJet == 1 || (nNonBJet == 2 && NonBJet_pt[1] < 50))',
+                'abs(BJet_eta[0]) < 2.5 && BJet_pt[0] > 25',
+                'abs(NonBJet_eta[0]) > 2.3',
+                'WNonB_mass > 140',
+                'Reco_w_pt < 120 && abs(Reco_w_eta) < 4.0',
              ]
 selection = ' && '.join(selections)
 
@@ -130,7 +131,7 @@ if not args.isSignal:
 
 step1_analyzerChain = [
 
-    # particle selections/filters TODO apply filter somewhere
+    # particle selections/filters
     MetFilter(
         globalOptions=globalOptions,
         outputName="MET_filter"
