@@ -11,35 +11,27 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from utils import deltaR, deltaPhi
 
 
-class JetSelection(Module):
-
-    LOOSE = 0
-    TIGHT = 1
-    TIGHTLEPVETO = 2
+class BTagSelection(Module):
+    #tight DeepFlav WP (https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation2016Legacy)
     
     def __init__(
          self,
          inputCollection=lambda event: Collection(event, "Jet"),
-         leptonCollectionDRCleaning=lambda event: [],
-         outputName="selectedJets",
+         outputName="selectedBJets",
          jetMinPt=30.,
-         jetMaxEta=4.8,
-         dRCleaning=0.4,
+         jetMaxEta=2.4,
          storeKinematics=['pt', 'eta'],
+         taggerFct = lambda jet: jet.btagDeepFlavB>0.7221,
          globalOptions={"isData": False, "year": 2016},
-         jetId=LOOSE
      ):
         self.globalOptions = globalOptions
-
         self.inputCollection = inputCollection
-        self.leptonCollectionDRCleaning = leptonCollectionDRCleaning
         self.outputName = outputName
         self.jetMinPt = jetMinPt
         self.jetMaxEta = jetMaxEta
-        self.dRCleaning = dRCleaning
         self.storeKinematics = storeKinematics
-        self.jetId=jetId
-
+        self.taggerFct = taggerFct
+        
     def beginJob(self):
         pass
 
@@ -65,7 +57,6 @@ class JetSelection(Module):
         selectedJets = []
         unselectedJets = []
 
-        leptonsForDRCleaning = self.leptonCollectionDRCleaning(event)
 
         for jet in jets:
             if jet.pt<self.jetMinPt:
@@ -76,26 +67,10 @@ class JetSelection(Module):
                 unselectedJets.append(jet)
                 continue
 
-            if (jet.jetId & (1 << self.jetId)) == 0:
+            if not self.taggerFct(jet):
                 unselectedJets.append(jet)
                 continue
-
-            minDeltaRSubtraction = 999.
-
-            if len(leptonsForDRCleaning) > 0:
-                mindphi = min(map(lambda lepton: math.fabs(deltaPhi(lepton, jet)), leptonsForDRCleaning))
-                mindr = min(map(lambda lepton: deltaR(lepton, jet), leptonsForDRCleaning))
-                
-                if mindr < self.dRCleaning:
-                    unselectedJets.append(jet)
-                    continue
-                    
-                setattr(jet,"minDPhiClean",mindphi)
-                setattr(jet,"minDRClean",mindr)
-            else:
-                setattr(jet,"minDPhiClean",100)
-                setattr(jet,"minDRClean",100)
-                
+               
             selectedJets.append(jet)
 
         self.out.fillBranch("n"+self.outputName, len(selectedJets))

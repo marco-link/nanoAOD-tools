@@ -3,14 +3,14 @@ import sys
 import math
 import ROOT
 import random
-from numpy.polynomial import laguerre
 import numpy as np
 
 
 class PhysicsObject(object):
-    def __init__(self, obj, pt=0., eta=0., phi=0., mass=0., keys=[]):
+    def __init__(self, obj=None, pt=0., eta=0., phi=0., mass=0., keys=[]):
         self._obj = obj
-        self._index = self._obj._index
+        if obj!=None:
+            self._index = self._obj._index
         self.__dict__["pt"] = pt
         self.__dict__["eta"] = eta
         self.__dict__["phi"] = phi
@@ -24,9 +24,15 @@ class PhysicsObject(object):
         return ret
 
     def originalP4(self):
+        if self._obj==None:
+            print "ERROR - object does not dependent on nanoaod object"
+            sys.exit(1)
         return self._obj.p4()
 
     def __str__(self):
+        if self._obj==None:
+            print "ERROR - object does not dependent on nanoaod object"
+            sys.exit(1)
         return self._obj.__str__()
 
 
@@ -51,15 +57,6 @@ def deltaR(j1, j2):
         (j1.eta-j2.eta)**2 +
         deltaPhi(j1.phi, j2.phi)**2
     )
-
-
-def getCtauLabel(logctau):
-    if logctau == 0:
-        return "0"
-    elif logctau > 0:
-        return "1"+(("0")*logctau)
-    elif logctau < 0:
-        return "0p"+(("0")*(abs(logctau)-1))+"1"
 
 
 def getHist(relFileName, histName):
@@ -124,24 +121,3 @@ def getSFXY(hist, x, y):
 
     return hist.GetBinContent(xBin, yBin), hist.GetBinError(xBin, yBin)
 
-
-
-def getAbscissasAndWeights(N=5):
-    # Laguerre polynomial roots and weights for Laguerre-Guass quadrature
-    coef = np.concatenate([np.zeros(N), [1]])
-    roots = laguerre.lagroots(coef)
-    weights = []
-    for n, root in enumerate(roots):
-        n = n+1
-        array = np.concatenate([np.zeros(N+1), [1]])
-        value = laguerre.lagval(root, array)
-        weight = root/((N+1)*value)**2
-        weights.append(weight)
-
-    return roots, weights
-
-def calcHash(value):
-    h = ((value >> 16) ^ value) * 0x45d9f3b
-    h = ((h >> 16) ^ h) * 0x45d9f3b
-    h = (h >> 16) ^ h
-    return h
