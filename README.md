@@ -14,7 +14,7 @@ Repeat only the last command at the beginning of every session.
 
 Please never commit neither the build directory, nor the empty init.py files created by the script.
 
-## Checkout instructions: CMSSW
+## Checkout instructions: CMSSW_11_1_7
 
     cd $CMSSW_BASE/src
     git clone https://github.com/WbWbX/nanoAOD-tools.git PhysicsTools/NanoAODTools
@@ -88,3 +88,53 @@ python scripts/nano_postproc.py outDir /eos/cms/store/user/andrey/f.root -I Phys
 This module has the same structure of its producer as `exampleProducer`, but in addition it utilizes a C++ code to calculate the mht variable, `src/mhtjuProducerCppWorker.cc`. This code is loaded in the `__init__` method of the producer.
 
 
+
+
+
+
+# Analysis workflow
+
+Run steps with `python processors/WbWbX.py --input <path to .root file> --step X` with `X=1, 2 or 3`!
+See `python processors/WbWbX.py -h` for more options.
+
+
+## step1
+
+- [x] preskim (background only)
+- [ ] particle selections/filters
+- [ ] additional weights calculation
+- [ ] scale factor calculation
+- [x] Jetcharge from parton flavour
+- [x] Wb generator (signal  only)
+- [x] drop trigger information and more unused variables
+
+
+## step2
+
+- [x] leptonic W reconstruction
+- [x] apply b tagging WP
+- [ ] apply b charge tagger
+- [x] drop special tagger variables
+
+
+## step3
+
+- [x] Event selection
+- [x] Wb reconstruction
+- [x] add smeared truth
+- [x] apply binning for asymmetry
+
+
+## plot (+ unfolding)
+
+
+
+# The Asymmetry binning
+
+-`bin > 0` onshell
+-`bin < 0` offshell
+
+- `abs(bin)==1` negative charge (bottom quark)
+- `abs(bin)==2` positive charge (anti bottom quark)
+
+- `bin == 0` zero charge

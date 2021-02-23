@@ -102,13 +102,15 @@ class TopReconstruction(Module):
         
         #take wboson that gives candidate mass closest to mtop
         mbestTop = 1000000
+        
         for i in range(len(wbosons)):
             topP4 = wbosons[i].p4()+bjet.p4()
-            if math.fabs(topP4.M()-TopReconstruction.MTOP)<mbestTop:
+            if math.fabs(min(mbestTop-1,topP4.M())-TopReconstruction.MTOP)<mbestTop:
                 mbestTop = topP4.M()
                 wboson = wbosons[i]
                 top = PhysicsObject(None, pt=topP4.Pt(), eta=topP4.Eta(), phi=topP4.Phi(), mass=topP4.M())
    
+        
 
         setattr(event,self.outputName+"_top_candidate",top)
         
