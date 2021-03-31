@@ -15,11 +15,17 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--isData', dest='isData', action='store_true', default=False)
 parser.add_argument('--isSignal', dest='isSignal', action='store_true', default=False)
+parser.add_argument('--nofilter', action='store_true', default=False, help='do not apply branch filters to the output')
 parser.add_argument('--year', dest='year', action='store', type=int, default=2016)
 parser.add_argument('--input', dest='inputFiles', action='append', default=[])
 parser.add_argument('--maxEntries', '-N', type=int, default=None)
 parser.add_argument('output', nargs=1)
 parser.add_argument('--step', type=int, default=0, help='stepnumber of the analysis workflow to run (can only run one step at a time)')
+
+
+
+
+
 
 
 args = parser.parse_args()
@@ -149,24 +155,21 @@ step1_analyzerChain = [
         globalOptions=globalOptions
     ),
 
-    # TODO Electron selection
-
-    #EventSkim(selection=lambda event: event.ntightMuons > 0),
     #SingleMuonTriggerSelection(
-        #inputCollection=lambda event: event.tightMuons,
+        #inputCollection=lambda event: event.tightMuon,
         #outputName="IsoMuTrigger",
         #storeWeights=True,
         #globalOptions=globalOptions
     #),
-
     #EventSkim(selection=lambda event: event.IsoMuTrigger_flag > 0),
-    #MuonVeto(
-        #inputCollection=lambda event: event.tightMuons_unselected,
-        #outputName = "vetoMuons",
-        #muonMinPt = 10.,
-        #muonMaxEta = 2.4,
-        #globalOptions=globalOptions
-    #),
+
+
+    # TODO Electron selection + trigger
+
+
+
+
+
 
     JetSelection(
         inputCollection=lambda event: Collection(event,"Jet"),
@@ -207,7 +210,7 @@ step1 = PostProcessor(
     cut=preskimcut,
     modules=step1_analyzerChain,
     friend=False,
-    outputbranchsel='processors/step1.txt',
+    outputbranchsel=None if args.nofilter else 'processors/step1.txt',
     maxEntries=args.maxEntries,
 )
 
@@ -257,10 +260,9 @@ step2 = PostProcessor(
     cut=leptonselection,
     modules=step2_analyzerChain,
     friend=False,
-    outputbranchsel='processors/step2.txt',
+    outputbranchsel=None if args.nofilter else 'processors/step2.txt',
     maxEntries=args.maxEntries,
 )
-
 
 
 
@@ -327,10 +329,9 @@ step3 = PostProcessor(
     cut=selection,
     modules=step3_analyzerChain,
     friend=False,
-    outputbranchsel='processors/step3.txt',
+    outputbranchsel=None if args.nofilter else 'processors/step3.txt',
     maxEntries=args.maxEntries,
 )
-
 
 
 
