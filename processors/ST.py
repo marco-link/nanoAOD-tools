@@ -56,7 +56,7 @@ analyzerChain = [
     MuonSelection(
         inputCollection=lambda event: Collection(event, "Muon"),
         outputName="tightMuons",
-        storeKinematics=['pt','eta'],
+        storeKinematics=['pt','eta','charge'],
         storeWeights=True,
         muonMinPt=minMuonPt[globalOptions["year"]],
         triggerMatch=True,
@@ -65,7 +65,7 @@ analyzerChain = [
         globalOptions=globalOptions
     ),
     
-    EventSkim(selection=lambda event: event.ntightMuons > 0),
+    EventSkim(selection=lambda event: event.ntightMuons == 1),
     SingleMuonTriggerSelection(
         inputCollection=lambda event: event.tightMuons,
         outputName="IsoMuTrigger",
@@ -81,6 +81,7 @@ analyzerChain = [
         muonMaxEta = 2.4,
         globalOptions=globalOptions
     ),
+    EventSkim(selection=lambda event: event.nvetoMuons == 0),
     MetFilter(
         globalOptions=globalOptions,
         outputName="MET_filter"
@@ -91,9 +92,49 @@ analyzerChain = [
         jetMinPt=30.,
         jetMaxEta=4.7,
         jetId=JetSelection.LOOSE,
-        outputName="selectedJets",
+        outputName="nominal_selectedJets",
+        globalOptions=globalOptions
+    ),
+    BTagSelection(
+        inputCollection=lambda event: event.nominal_selectedJets,
+        outputName="nominal_selectedBJets",
+        jetMinPt=30.,
+        jetMaxEta=2.4,
+    ),
+    EventSkim(selection=lambda event: event.nnominal_selectedJets>=2 and event.nnominal_selectedBJets==1),
+    JetGenInfo(
+        inputCollection = lambda event: event.nominal_selectedBJets,
+        outputName = "nominal_selectedBJets",
+        globalOptions=globalOptions
+    ),
+    ChargeTagging(
+        modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
+        featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
+        inputCollections = [lambda event: event.nominal_selectedBJets],
+        taggerName = "tagger",
+    ),
+    SimpleJetChargeSum(
+        inputCollection=lambda event: event.nominal_selectedBJets,
+        outputCollection="selectedBJets",
+        outputName="betaChargeSum",
+        beta=0.8,
+        globalOptions=globalOptions
+    ),
+    WbosonReconstruction(
+        leptonObject = lambda event: event.tightMuons[0],
+        metObject =lambda event: Object(event, "MET"),
+        outputName="nominal",
+    ),
+    TopReconstruction(
+        bJetCollection=lambda event: event.nominal_selectedBJets,
+        lJetCollection=lambda event: event.nominal_selectedBJets_unselected,
+        leptonObject=lambda event: event.tightMuons[0],
+        wbosonCollection=lambda event: event.nominal_w_candidates,
+        metObject = lambda event: Object(event, "MET"),
+        outputName="nominal",
         globalOptions=globalOptions
     )
+    
     
 ]
 
@@ -122,6 +163,8 @@ if not globalOptions["isData"]:
                 lambda tree, coupling=coupling: tree.branch('LHEWeights_width_%i'%coupling,'F'),
                 lambda tree, event, coupling=coupling: tree.fillBranch('LHEWeights_width_%i'%coupling,getattr(event,"LHEWeights_width_%i"%coupling)),
             ])
+            
+    analyzerChain.append(EventInfo(storeVariables=storeVariables))
 
 p = PostProcessor(
     args.output[0],

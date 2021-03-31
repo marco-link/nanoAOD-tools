@@ -7,25 +7,24 @@ import scipy.optimize
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
-
+from utils import deltaPhi, PhysicsObject
 
 class WbosonReconstruction(Module):
+    MW = 80.4
+
     def __init__(self,
-                 electronCollectionName = 'Electron',
-                 muonCollectionName = 'Muon',
-                 metName = 'MET',
-                 outputName='Reco_w',
-                 Wmass = 80.385,
-                 debug=False
-                 ):
-        self.electronCollectionName = electronCollectionName
-        self.muonCollectionName = muonCollectionName
-        self.metName = metName
+
+        leptonObject = lambda event: Collection(event,"Muon")[0],
+        metObject =lambda event: Object(event, "MET"),
+        globalOptions={"isData":False}, 
+        outputName='nominal',
+        debug = False
+    ):
+        self.leptonObject = leptonObject
+        self.metObject = metObject
+        self.globalOptions=globalOptions
         self.outputName=outputName
-        self.Wmass = Wmass
-
         self.debug = debug
-
 
     def beginJob(self):
         pass
@@ -38,65 +37,62 @@ class WbosonReconstruction(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
 
-        self.out.branch(self.outputName + '_pt', 'F')
-        self.out.branch(self.outputName + '_eta', 'F')
-        self.out.branch(self.outputName + '_phi', 'F')
-        self.out.branch(self.outputName + '_mass', 'F')
-
-        self.out.branch(self.metName + '_etaFromW', 'F')
-
-
+        self.out.branch(self.outputName+"_met", "F")
+        self.out.branch(self.outputName+"_mtw", "F")
+        self.out.branch(self.outputName+"_met_lepton_deltaPhi", "F")
+            
+    def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
+        pass
+        
+        
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
 
 
     def analyze(self, event):
-        electrons = Collection(event, self.electronCollectionName)
-        muons = Collection(event, self.muonCollectionName)
-        metObj = Object(event, self.metName)
+        lepton = self.leptonObject(event)
+        met = self.metObject(event)
+        
+        dPhi = deltaPhi(lepton,met)
+        mtw = math.sqrt(2*lepton.pt*met.pt*(1-math.cos(dPhi)))
+        
+        self.out.fillBranch(self.outputName+"_met", met.pt)
+        self.out.fillBranch(self.outputName+"_mtw", mtw)
+        self.out.fillBranch(self.outputName+"_met_lepton_deltaPhi", dPhi)
+   
 
-        met = ROOT.TLorentzVector()
-        met.SetPtEtaPhiM(metObj.pt, 0, metObj.phi, 0)
-
-
-        lep = None
-        if len(electrons)==1 and len(muons)==0:
-            lep = electrons[0].p4()
-        elif len(electrons)==0 and len(muons)==1:
-            lep = muons[0].p4()
-        else:
-            print('Error: Found multiple leptons! No W reconstruction possible.')
-            return False
-
-
-        recoMet = self.recoMetFromWmass(lep, met)
-        W = lep + recoMet
-
-
-
-        self.out.fillBranch(self.outputName + '_pt', W.Pt())
-        self.out.fillBranch(self.outputName + '_eta', W.Eta())
-        self.out.fillBranch(self.outputName + '_phi', W.Phi())
-        self.out.fillBranch(self.outputName + '_mass', W.M())
-
-        self.out.fillBranch(self.metName + '_etaFromW', recoMet.Eta())
-
+        metP4 = ROOT.TLorentzVector()
+        metP4.SetPtEtaPhiM(met.pt, 0, met.phi, 0)
+        
+        leptonP4 = lepton.p4()
+        
+        wbosons = []
+        
+        for nuP4 in self.recoMetFromWmass(leptonP4,metP4):
+            wP4 = nuP4+leptonP4
+            wbosons.append(PhysicsObject(None, pt=wP4.Pt(), eta=wP4.Eta(), phi=wP4.Phi(), mass= wP4.M()))
+            
+        if len(wbosons)==0:
+            print "ERROR - no wbosons"
+            
+        setattr(event,self.outputName+"_w_candidates",wbosons)
+            
         return True
 
 
-    def recoMetFromWmass(self, lep, nu):
+    def recoMetFromWmass(self, lep, met):
         '''
         aka the real thorsten method
         '''
 
         # definition of the constant mu in Eq. 4.5 (here called alpha to not confuse mu and nu)
         # also converting p_T and cos dphi into p_x and p_y
-        alpha = (self.Wmass**2 / 2) + (lep.Px() * nu.Px()) + (lep.Py() * nu.Py())
+        alpha = (WbosonReconstruction.MW**2 / 2) + (lep.Px() * met.Px()) + (lep.Py() * met.Py())
 
         # for p_z,nu there is a quadratic equation with up to two solutions as shown in Eq. 4.6 and A.7
         # (NOTE: there is a 'power of two' missing in the first denominator of Eq. 4.6)
         # first, check if we have complex solution, i.e. if the radicand is negative
-        rad = ((alpha**2 * lep.Pz()**2) / (lep.Pt()**4)) - ((lep.E()**2 * nu.Pt()**2 - alpha**2) / (lep.Pt()**2))
+        rad = ((alpha**2 * lep.Pz()**2) / (lep.Pt()**4)) - ((lep.E()**2 * met.Pt()**2 - alpha**2) / (lep.Pt()**2))
 
         if rad < 0:
             # complex solutions, should be around 30% of all cases:
@@ -106,19 +102,19 @@ class WbosonReconstruction(Module):
 
 
             # save p_x^miss and p_y^miss as we need them later to determine the better solution
-            pxmiss = nu.Px()
-            pymiss = nu.Py()
+            pxmiss = met.Px()
+            pymiss = met.Py()
 
             # search for both p_y solutions the corresponding p_x that minimizes the distance wrt p_x^miss and p_y^miss
 
             # helper function for minimizer constraint
             def rad_py(x):
-                return self.Wmass**2 + 4 * lep.Px() * x
+                return WbosonReconstruction.MW**2 + 4 * lep.Px() * x
 
             # the delta plus function with the p_y^nu plus solution
             def min_f1(x):
                 r = rad_py(x)
-                y = (self.Wmass**2 * lep.Py() + 2 * lep.Px() * lep.Py() * x + self.Wmass * lep.Pt() * math.sqrt(r)) / (2 * lep.Px()**2)
+                y = (WbosonReconstruction.MW**2 * lep.Py() + 2 * lep.Px() * lep.Py() * x + WbosonReconstruction.MW * lep.Pt() * math.sqrt(r)) / (2 * lep.Px()**2)
                 res = math.sqrt((x - pxmiss)**2 + (y - pymiss)**2)
                 #print('... x: %f, f(x): %f, rad: %f' %(x,res,r))
                 return res
@@ -126,7 +122,7 @@ class WbosonReconstruction(Module):
             # the delta minus function with the p_y^nu minus solution
             def min_f2(x):
                 r = rad_py(x)
-                y = (self.Wmass**2 * lep.Py() + 2 * lep.Px() * lep.Py() * x - self.Wmass * lep.Pt() * math.sqrt(r)) / (2 * lep.Px()**2)
+                y = (WbosonReconstruction.MW**2 * lep.Py() + 2 * lep.Px() * lep.Py() * x - WbosonReconstruction.MW * lep.Pt() * math.sqrt(r)) / (2 * lep.Px()**2)
                 res = math.sqrt((x - pxmiss)**2 + (y - pymiss)**2)
                 #print('... x: %f, f(x): %f, rad: %f' %(x,res,r))
                 return res
@@ -141,7 +137,7 @@ class WbosonReconstruction(Module):
 
 
             # try to implement constraints as bounds on fit parameter
-            x_bound = -((self.Wmass**2) / (4 * lep.Px()))
+            x_bound = -((WbosonReconstruction.MW**2) / (4 * lep.Px()))
 
             if x_bound > 0:
                 max_range = x_bound - 1e-2
@@ -178,20 +174,21 @@ class WbosonReconstruction(Module):
             if d1 < d2:
                 best_fit = 1
                 pxnew = fit1.x[0]
-                pynew = (self.Wmass**2 * lep.Py() + 2 * lep.Px() * lep.Py() * pxnew + self.Wmass * lep.Pt() * math.sqrt(rad_py(pxnew))) / (2 * lep.Px()**2)
+                pynew = (WbosonReconstruction.MW**2 * lep.Py() + 2 * lep.Px() * lep.Py() * pxnew + WbosonReconstruction.MW * lep.Pt() * math.sqrt(rad_py(pxnew))) / (2 * lep.Px()**2)
             else:
                 best_fit = 2
                 pxnew = fit2.x[0]
-                pynew = (self.Wmass**2 * lep.Py() + 2 * lep.Px() * lep.Py() * pxnew - self.Wmass * lep.Pt() * math.sqrt(rad_py(pxnew))) / (2 * lep.Px()**2)
+                pynew = (WbosonReconstruction.MW**2 * lep.Py() + 2 * lep.Px() * lep.Py() * pxnew - WbosonReconstruction.MW * lep.Pt() * math.sqrt(rad_py(pxnew))) / (2 * lep.Px()**2)
 
             # calculate remaining single p_z solution with fixed p_x and p_y
-            pznew = lep.Pz() / lep.Pt()**2 * ((self.Wmass**2 / 2) + (lep.Px() * pxnew) + (lep.Py() * pynew))
+            pznew = lep.Pz() / lep.Pt()**2 * ((WbosonReconstruction.MW**2 / 2) + (lep.Px() * pxnew) + (lep.Py() * pynew))
 
             # print('delta1: %f (%f), delta2: %f (%f)' %(fit1.fun, fit1.x[0], fit2.fun, fit2.x[0]))
             # print('x: %f, pxmiss: %f' %(pxnew, pxmiss))
             # print('y: %f, pymiss: %f' %(pynew, pymiss))
             # print('T: %f, pTmiss: %f' %(math.sqrt(pxnew**2+pynew**2), math.sqrt(pxmiss**2+pymiss**2)))
 
+            nu = ROOT.TLorentzVector()
             nu.SetPxPyPzE(pxnew, pynew, pznew, math.sqrt(pxnew**2 + pynew**2 + pznew**2))
 
 
@@ -200,8 +197,7 @@ class WbosonReconstruction(Module):
                 print('fit2 result: d(x) = %f, x = %f, status %i, success %r' %(fit2.fun, fit2.x[0], fit2.status, fit2.success))
                 print('choice: %i' %best_fit)
 
-            #print('im: %f' %((lep + nu).Eta()))
-            return nu
+            return [nu]
 
 
         else:
@@ -211,14 +207,15 @@ class WbosonReconstruction(Module):
             sol1 = lep.Pz() * alpha / lep.Pt()**2 + math.sqrt(rad)
             sol2 = lep.Pz() * alpha / lep.Pt()**2 - math.sqrt(rad)
 
+            nu1 = ROOT.TLorentzVector()
+            nu2 = ROOT.TLorentzVector()
+
             # choose the smaller one
-            if abs(sol1) < abs(sol2):
-                nu.SetPz(sol1)
-            else:
-                nu.SetPz(sol2)
+            if math.fabs(sol1) > math.fabs(sol2):
+                sol1,sol2 = sol2,sol1
+            
+            nu1.SetPxPyPzE(met.Px(),met.Py(),sol1,math.sqrt(met.Pt()**2 + sol1**2))
+            nu2.SetPxPyPzE(met.Px(),met.Py(),sol1,math.sqrt(met.Pt()**2 + sol2**2))
 
-            nu.SetE(nu.P())
-
-            #print('re: %f' %((lep + nu).Eta()))
-            return nu
+            return [nu1,nu2]
 

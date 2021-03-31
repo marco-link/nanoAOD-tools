@@ -14,7 +14,7 @@ Repeat only the last command at the beginning of every session.
 
 Please never commit neither the build directory, nor the empty init.py files created by the script.
 
-## Checkout instructions: CMSSW
+## Checkout instructions: CMSSW_11_1_7
 
     cd $CMSSW_BASE/src
     git clone https://github.com/WbWbX/nanoAOD-tools.git PhysicsTools/NanoAODTools
