@@ -11,6 +11,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from utils import getGraph, getHist, combineHist2D, getSFXY, deltaR
 
 class MuonSelection(Module):
+    VERYTIGHT = 1
     TIGHT = 1
     MEDIUM = 2
     LOOSE = 3
@@ -183,7 +184,17 @@ class MuonSelection(Module):
             self.muonId = lambda muon: True
             self.muonIdSF = self.idLooseSFHist
             
-        if muonIso==MuonSelection.TIGHT:
+            
+        if muonIso==MuonSelection.VERYTIGHT:
+            self.muonIso = lambda muon: muon.pfRelIso04_all<0.06
+            if muonID==MuonSelection.TIGHT:
+                #TODO: need to use very tight SFs
+                self.muonIsoSF = self.isoTightTightSFHist
+            else:
+                print "Error - unsupported combination"
+                sys.exit(1)
+            
+        elif muonIso==MuonSelection.TIGHT:
             self.muonIso = lambda muon: muon.pfRelIso04_all<0.15
             if muonID==MuonSelection.TIGHT:
                 self.muonIsoSF = self.isoTightTightSFHist
