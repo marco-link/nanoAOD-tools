@@ -25,4 +25,6 @@ from JetGenCharge import JetGenChargeProducer
 from AsymBin import AsymBinProducer
 from ChargeSmear import ChargeSmearProducer
 from Tagger import TagJetProducer
-
+from ParticleLevel import ParticleLevel
+from PartonLevel import PartonLevel
+from XGBEvaluation import XGBEvaluation

@@ -73,7 +73,7 @@ class TopReconstruction(Module):
         wbosons = self.wbosonCollection(event)
         met = self.metObject(event)
         
-        if len(ljets)==0 or len(bjets)==0 or len(wbosons)==0:
+        if len(ljets+bjets)<2 or len(wbosons)==0:
             self.out.fillBranch(self.outputName+"_top_mass", -1.0)
             self.out.fillBranch(self.outputName+"_top_pt", -1.0)
             self.out.fillBranch(self.outputName+"_top_eta", 0.0)
@@ -85,8 +85,23 @@ class TopReconstruction(Module):
             self.out.fillBranch(self.outputName+"_wboson_cosHelicity", 0.0)
             return True
             
-        ljet = sorted(ljets,key=lambda x: math.fabs(x.eta), reverse=True)[0] #take most forward
-        bjet = sorted(bjets,key=lambda x: x.pt, reverse=True)[0] #take highest pT
+            
+        sortedLjets = sorted(ljets,key=lambda x: math.fabs(x.eta), reverse=True) #sort forward
+        sortedBjets = sorted(bjets,key=lambda x: x.pt, reverse=True) #sort pT
+        
+        if len(sortedLjets)>=1 and len(sortedBjets)>=1:
+            #default in signal region
+            ljet = sortedLjets[0] #most forward
+            bjet = sortedBjets[0] #highest pt
+        elif len(sortedLjets)>=2 and len(sortedBjets)==0:
+            #control 0b regions
+            ljet = sortedLjets[0] #most forward
+            bjet = sortedLjets[-1] #most central
+        elif len(sortedLjets)==0 and len(sortedBjets)>=2:
+            #control 0l regions
+            ljet = sortedBjets[1] #subleading pT
+            bjet = sortedBjets[0] #leading pT
+        
         
         eventShapes = ROOT.EventShapes()
         eventShapes.addObject(lepton.pt, lepton.eta, lepton.phi, 0.0)
@@ -114,7 +129,6 @@ class TopReconstruction(Module):
 
         setattr(event,self.outputName+"_top_candidate",top)
         
-        #TODO: this is buggy
         leptonInWbosonRestframe = lepton.p4()
         leptonInWbosonRestframe.Boost(-wboson.p4().BoostVector())
         topInWbosonRestframe = -top.p4()

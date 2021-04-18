@@ -17,7 +17,8 @@ class BTagSelection(Module):
     def __init__(
          self,
          inputCollection=lambda event: Collection(event, "Jet"),
-         outputName="selectedBJets",
+         outputBName="selectedBJets",
+         outputLName="selectedLJets",
          jetMinPt=30.,
          jetMaxEta=2.4,
          storeKinematics=['pt', 'eta'],
@@ -26,7 +27,8 @@ class BTagSelection(Module):
      ):
         self.globalOptions = globalOptions
         self.inputCollection = inputCollection
-        self.outputName = outputName
+        self.outputBName = outputBName
+        self.outputLName = outputLName
         self.jetMinPt = jetMinPt
         self.jetMaxEta = jetMaxEta
         self.storeKinematics = storeKinematics
@@ -41,9 +43,9 @@ class BTagSelection(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
         
-        self.out.branch("n"+self.outputName, "I")
+        self.out.branch("n"+self.outputBName, "I")
         for variable in self.storeKinematics:
-            self.out.branch(self.outputName+"_"+variable, "F", lenVar="n"+self.outputName)
+            self.out.branch(self.outputBName+"_"+variable, "F", lenVar="n"+self.outputBName)
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -73,13 +75,13 @@ class BTagSelection(Module):
                
             selectedJets.append(jet)
 
-        self.out.fillBranch("n"+self.outputName, len(selectedJets))
+        self.out.fillBranch("n"+self.outputBName, len(selectedJets))
         for variable in self.storeKinematics:
-            self.out.fillBranch(self.outputName+"_"+variable,
+            self.out.fillBranch(self.outputBName+"_"+variable,
                                 map(lambda jet: getattr(jet, variable), selectedJets))
 
-        setattr(event, self.outputName, selectedJets)
-        setattr(event, self.outputName+"_unselected", unselectedJets)
+        setattr(event, self.outputBName, selectedJets)
+        setattr(event, self.outputLName, unselectedJets)
 
         return True
 

@@ -61,7 +61,7 @@ analyzerChain = [
         muonMinPt=minMuonPt[globalOptions["year"]],
         triggerMatch=True,
         muonID=MuonSelection.TIGHT,
-        muonIso=MuonSelection.TIGHT,
+        muonIso=MuonSelection.VERYTIGHT,
         globalOptions=globalOptions
     ),
     
@@ -97,16 +97,13 @@ analyzerChain = [
     ),
     BTagSelection(
         inputCollection=lambda event: event.nominal_selectedJets,
-        outputName="nominal_selectedBJets",
+        outputBName="nominal_selectedBJets",
+        outputLName="nominal_selectedLJets",
         jetMinPt=30.,
         jetMaxEta=2.4,
     ),
-    EventSkim(selection=lambda event: event.nnominal_selectedJets>=2 and event.nnominal_selectedBJets==1),
-    JetGenInfo(
-        inputCollection = lambda event: event.nominal_selectedBJets,
-        outputName = "nominal_selectedBJets",
-        globalOptions=globalOptions
-    ),
+    EventSkim(selection=lambda event: event.nnominal_selectedJets>=2),
+    
     ChargeTagging(
         modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
         featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
@@ -127,18 +124,38 @@ analyzerChain = [
     ),
     TopReconstruction(
         bJetCollection=lambda event: event.nominal_selectedBJets,
-        lJetCollection=lambda event: event.nominal_selectedBJets_unselected,
+        lJetCollection=lambda event: event.nominal_selectedLJets,
         leptonObject=lambda event: event.tightMuons[0],
         wbosonCollection=lambda event: event.nominal_w_candidates,
         metObject = lambda event: Object(event, "MET"),
         outputName="nominal",
         globalOptions=globalOptions
+    ),
+    XGBEvaluation(
+        modelPath="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/testBDT_bdt.bin",
+        inputFeatures="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/bdt_inputs.py",
     )
     
     
 ]
 
 
+if not globalOptions["isData"]:
+    analyzerChain.append(
+        JetGenInfo(
+            inputCollection = lambda event: event.nominal_selectedBJets,
+            outputName = "nominal_selectedBJets",
+            globalOptions=globalOptions
+        )
+    )
+
+if args.isSignal:
+    analyzerChain.append(
+        ParticleLevel()
+    )
+    analyzerChain.append(
+        PartonLevel()
+    )
 
 storeVariables = [
     [lambda tree: tree.branch("PV_npvs", "I"), lambda tree,
@@ -169,7 +186,7 @@ if not globalOptions["isData"]:
 p = PostProcessor(
     args.output[0],
     args.inputFiles,
-    cut="(nJet>0)&&((nElectron+nMuon)>0)",
+    cut="(nJet>1)&&((nElectron+nMuon)>0)",
     modules=analyzerChain,
     friend=True
 )
