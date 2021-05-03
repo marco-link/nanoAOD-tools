@@ -8,10 +8,9 @@ from gen_helper import *
 
 
 class JetGenChargeProducer(Module):
-    def __init__(self, JetCollectionName='Jet', outputname='GenCharge'):
-        self.JetCollectionName = JetCollectionName
-
-        self.chargeName = self.JetCollectionName + '_' + outputname
+    def __init__(self, JetCollection=lambda event: Collection(event, 'Jet'), outputName='Jet'):
+        self.JetCollection = JetCollection
+        self.outputName = outputName
 
     def beginJob(self):
         pass
@@ -21,7 +20,7 @@ class JetGenChargeProducer(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
-        self.out.branch(self.chargeName, "F", lenVar='n' + self.JetCollectionName)
+        self.out.branch(self.outputName + '_GenPartonCharge', "F", lenVar='n' + self.outputName)
 
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -30,7 +29,7 @@ class JetGenChargeProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail, go to next event)"""
 
-        jets = Collection(event, self.JetCollectionName)
+        jets = self.JetCollection(event)
 
         charge= []
 
@@ -45,6 +44,6 @@ class JetGenChargeProducer(Module):
                 charge.append(getChargeFromPDG(pdg))
 
 
-        self.out.fillBranch(self.chargeName, charge)
+        self.out.fillBranch(self.outputName + '_GenPartonCharge', charge)
 
         return True

@@ -13,14 +13,12 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 
 class ChargeTagging(Module):
-
     def __init__(
         self,
         modelPath,
         featureDictFile,
         inputCollections = [lambda event: Collection(event, "Jet")],
         taggerName = "nn",
-        globalOptions = {"isData":False},
     ):
         self.modelPath = os.path.expandvars(modelPath)
         
@@ -35,7 +33,6 @@ class ChargeTagging(Module):
         self.predictionLabels = feature_dict_module.predictionLabels
         
         self.taggerName = taggerName
-        self.globalOptions = globalOptions
 
     def beginJob(self):
         pass

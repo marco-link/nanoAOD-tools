@@ -1,15 +1,9 @@
-import os
-import sys
-import math
 import argparse
-import random
-import ROOT
-import numpy as np
 
-from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
-from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
-from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.modules import *
+from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
+from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
+
 
 parser = argparse.ArgumentParser()
 
@@ -20,331 +14,279 @@ parser.add_argument('--year', dest='year', action='store', type=int, default=201
 parser.add_argument('--input', dest='inputFiles', action='append', default=[])
 parser.add_argument('--maxEntries', '-N', type=int, default=None)
 parser.add_argument('output', nargs=1)
-parser.add_argument('--step', type=int, default=0, help='stepnumber of the analysis workflow to run (can only run one step at a time)')
-
-
-
-
 
 
 
 args = parser.parse_args()
 print(args)
 
-globalOptions = {
-    "isData": args.isData,
-    "isSignal": args.isSignal,
-    "year": args.year
-}
-
-isMC = not args.isData
+year = args.year
+isSignal = args.isSignal
+isData = args.isData
+isMC = not isData
 
 
-preskim = {
+Wboson_mass = 80.385
+top_mass = 172.5
+offshell_mass_window = 20
+
+
+triggers = {
             2016: '(HLT_IsoMu24 == 1) || (HLT_IsoTkMu24 == 1) || (HLT_Ele32_eta2p1_WPTight_Gsf==1)',
             2017: '(HLT_Ele30_eta2p1_WPTight_Gsf_CentralPFJet35_EleCleaned == 1) || (HLT_Ele35_WPTight_Gsf == 1) || (HLT_IsoMu27==1)',
             2018: '(HLT_IsoMu24 == 1) || (HLT_Ele30_eta2p1_WPTight_Gsf_CentralPFJet35_EleCleaned == 1) || (HLT_Ele32_WPTight_Gsf == 1)'
-          }
+          }[year] if not isSignal else ''
+
+minMuonPt = {2016: 25., 2017: 28., 2018: 25.}[year]
+minElectronPt = {2016: 29., 2017: 34., 2018: 34.}[year]
+
+met_object = {
+    2016: lambda event: Object(event, "MET"),
+    2017: lambda event: Object(event, "METFixEE2017"),
+    2018: lambda event: Object(event, "MET")
+}[year]
 
 
 
-minMuonPt = {
-            2016: 25.,
-            2017: 28.,
-            2018: 25.
-            }
-
-
-
-
-
-
-# Final Event selection
-
-leptonselection = 'nElectron + ntightMuon == 1' # applied before step 2
-
-def WNonB_mass(event):
-    jet = Collection(event, 'NonBJet')
-
-    if len(jet)>0:
-        return (Object(event, 'Reco_w').p4() + jet[0].p4()).M()
-    else:
-        return -1
-
-
-# applied before step 3
-selections = [  'MET_filter',
-                '(nBJet == 1 || (nBJet == 2 && BJet_pt[1] < 50))',
-                '(nNonBJet == 1 || (nNonBJet == 2 && NonBJet_pt[1] < 50))',
-                'abs(BJet_eta[0]) < 2.5 && BJet_pt[0] > 25',
-                'abs(NonBJet_eta[0]) > 2.3',
-                'WNonB_mass > 140',
-                'Reco_w_pt < 120 && abs(Reco_w_eta) < 4.0',
-             ]
-selection = ' && '.join(selections)
-
-
-
-
-
-
-
-
-
-
-
-# TODO verify WPs
+# TODO verify/use up to date WPs
 looseWP = {
             2016: 0.06140,
             2017: 0.05210,
             2018: 0.04940
-          }
+          }[year]
 
 mediumWP = {
             2016: 0.30930,
             2017: 0.30330,
             2018: 0.27700
-           }
+           }[year]
 
 tightWP = {
             2016: 0.72210,
             2017: 0.74890,
             2018: 0.72640
-          }
-
-
-# used for onshell/offshell
-topmass = 172.5
-masswindow = 20
+          }[year]
 
 
 
+analyzerChain = [
 
-
-
-
-##############
-##  STEP 1  ##
-##############
-
-
-# apply preskim only to background
-preskimcut = ''
-if not args.isSignal:
-    preskimcut = preskim[args.year]
-
-
-
-step1_analyzerChain = [
+    WbGenProducer(dRmax=0.4) if isSignal and not isData else DummyModule(),
 
     # particle selections/filters
     MetFilter(
-        globalOptions=globalOptions,
-        outputName="MET_filter"
+        isData = isData,
+        outputName = 'MET_filter'
     ),
+    EventSkim(selection = lambda event: event.MET_filter == 1),
 
+    ########
+    # Muon #
+    ########
     MuonSelection(
         inputCollection=lambda event: Collection(event, 'Muon'),
-        outputName='tightMuon',
-        storeKinematics=['mass', 'pt', 'eta', 'phi'],
+        outputName='tightMuons',
+        storeKinematics=['mass', 'pt', 'eta', 'phi', 'charge'],
         storeWeights=True,
-        muonMinPt=minMuonPt[globalOptions['year']],
+        muonMinPt=minMuonPt,
         triggerMatch=True,
         muonID=MuonSelection.TIGHT,
-        muonIso=MuonSelection.TIGHT,
-        globalOptions=globalOptions
+        muonIso=MuonSelection.VERYTIGHT,
+        year=year,
+        isData=isData,
     ),
 
     #SingleMuonTriggerSelection(
         #inputCollection=lambda event: event.tightMuon,
         #outputName="IsoMuTrigger",
         #storeWeights=True,
-        #globalOptions=globalOptions
+        #year=year,
+        #isData=isData,
     #),
     #EventSkim(selection=lambda event: event.IsoMuTrigger_flag > 0),
 
 
+    ############
+    # Electron #
+    ############
+
     # TODO Electron selection + trigger
 
 
+    #TODO What happens here? Also Electrons?
+    ###EventSkim(selection=lambda event: event.IsoMuTrigger_flag > 0),
+    ###MuonVeto(
+        ###inputCollection=lambda event: event.tightMuons_unselected,
+        ###outputName = "vetoMuons",
+        ###muonMinPt = 10.,
+        ###muonMaxEta = 2.4,
+        ###globalOptions=globalOptions
+    ###),
+    ###EventSkim(selection=lambda event: event.nvetoMuons == 0),
 
 
 
+
+    EventSkim(selection = lambda event: event.ntightMuons==1 or event.nElectron==1),
+
+
+    ########
+    # Jets #
+    ########
 
     JetSelection(
-        inputCollection=lambda event: Collection(event,"Jet"),
-        #leptonCollectionDRCleaning=lambda event: event.tightMuons,
+        inputCollection=lambda event: Collection(event, 'Jet'),
+        leptonCollectionDRCleaning=lambda event: Collection(event, 'tightMuons') if event.ntightMuons==1 else Collection(event, 'Electron'),
         jetMinPt=30.,
         jetMaxEta=4.7,
         jetId=JetSelection.LOOSE,
-        outputName="selectedJet",
+        outputName='nominal_selectedJets',
         storeKinematics=['mass',  'pt','eta', 'phi', 'partonFlavour', 'btagDeepFlavB'],
-        globalOptions=globalOptions
     ),
 
+    # TODO BTagging SF
+    BTagSelection(
+        inputCollection=lambda event: event.nominal_selectedJets,
+        outputBName="nominal_selectedBJets",
+        outputLName="nominal_selectedNonBJets",
+        jetMinPt=30.,
+        jetMaxEta=2.4,
+        storeKinematics=['mass', 'pt', 'eta', 'phi', 'partonFlavour', 'btagDeepFlavB'],
+        taggerFct=lambda obj: obj.btagDeepFlavB>tightWP and obj.pt>30 and obj.eta < 2.4,
+    ),
+
+    EventSkim(selection = lambda event: event.nnominal_selectedBJets    == 1 or (event.nnominal_selectedBJets    == 2 and event.nominal_selectedBJets[1].pt    < 50)),
+    EventSkim(selection = lambda event: event.nnominal_selectedNonBJets == 1 or (event.nnominal_selectedNonBJets == 2 and event.nominal_selectedNonBJets[1].pt < 50)),
+    EventSkim(selection = lambda event: abs(event.nominal_selectedNonBJets[0].eta) > 2.3),
 
 
 
-#TODO weights calculation
+    JetGenInfo(
+        inputCollection=lambda event: event.nominal_selectedBJets,
+        outputName='nominal_selectedBJets',
+    ),
 
-#TODO scale factor calculation
-
-
-    # Jet charge from partonFlavor
     JetGenChargeProducer(
-        JetCollectionName='selectedJet',
-        outputname='GenCharge'
+        JetCollection=lambda event: event.nominal_selectedBJets,
+        outputName='nominal_selectedBJets'
     ),
-]
 
-# add Wb generator to signal sample
-if args.isSignal:
-    step1_analyzerChain.append(WbGenProducer(dRmax=0.4))
+    ChargeTagging(
+        modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
+        featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
+        inputCollections = [lambda event: event.nominal_selectedBJets],
+        taggerName = "nominal_selectedBJets_Chargetagger",
+    ),
 
-
-
-step1 = PostProcessor(
-    args.output[0],
-    args.inputFiles,
-    postfix='_1',
-    cut=preskimcut,
-    modules=step1_analyzerChain,
-    friend=False,
-    outputbranchsel=None if args.nofilter else 'processors/step1.txt',
-    maxEntries=args.maxEntries,
-)
+    ##SimpleJetChargeSum(
+        ##inputCollection=lambda event: event.nominal_selectedBJets,
+        ##outputCollection="selectedBJets",
+        ##outputName="betaChargeSum",
+        ##beta=0.8,
+        ##globalOptions=globalOptions
+    ##),
 
 
 
+    #TODO weights calculation
 
-##############
-##  STEP 2  ##
-##############
 
-step2_analyzerChain = [
+    ########
+    # Reco #
+    ########
 
-    # leptonic W reco
     WbosonReconstruction(
-        electronCollectionName = 'Electron',
-        muonCollectionName = 'tightMuon',
-        metName = 'MET',
-        outputName='Reco_w',
-        Wmass = 80.385
+        leptonObject = lambda event: Collection(event, 'tightMuons')[0] if event.ntightMuons==1 else Collection(event, 'Electron')[0],
+        metObject = met_object,
+        WbosonMass = Wboson_mass,
+        outputName = 'Reco_W',
     ),
 
-# TODO apply b charge tagger
-
-    # apply btagging WP
-    TagJetProducer(
-        JetCollectionName = 'selectedJet',
-        TagJetOutputName = 'BJet',
-        NonTagJetOutputName = 'NonBJet',
-        storeVariables = ['mass', 'pt', 'eta', 'phi', 'btagDeepFlavB', 'GenCharge'],  #TODO add b charge tagger charge
-        tagger = 'btagDeepFlavB',
-        WP = mediumWP[args.year]
+    WbReconstruction(
+        WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        outputName = 'Reco_Wb',
+        WbosonSelection = WbReconstruction.LOW_MET_PZ,
+        BSelection = WbReconstruction.HIGH_PT,
+        top_mass = top_mass,
+        offshell_mass_window = offshell_mass_window,
     ),
 
-    CalcVar(
-        function = WNonB_mass,
-        outputName = 'WNonB_mass',
+    EventSkim(selection=lambda event: event.Reco_W_mass[event.Reco_Wb_W_idx] < 120 and abs(event.Reco_W_eta[event.Reco_Wb_W_idx]) < 4.0 ),
+
+    CalculateVariable(
+        function = lambda event: (Collection(event, 'Reco_W')[event.Reco_Wb_W_idx].p4() + Collection(event, 'nominal_selectedNonBJets')[0].p4()).M() if len(Collection(event, 'nominal_selectedNonBJets')) > 0 else -99,
+        outputName = 'Reco_WNonB_mass',
         vartype='F'
     ),
+    EventSkim(selection=lambda event: event.Reco_WNonB_mass > 140),
+
+
+
+
+
+
+
+    ## apply binning for asymmetry
+    #AsymBinProducer(
+        #massBranch='Reco_wb_mass',
+        #chargeBranch='Reco_wb_bjet_charge',
+        #outputName='Reco_AsymBin',
+        #mass=top_mass,
+        #masswindow=offshell_mass_window
+    #),
+
+
+    #if signal
+    ## calculate asymmetry for generator truth
+    #step3_analyzerChain.append(AsymBinProducer(
+                                    #massBranch='Gen_wb_mass',
+                                    #chargeBranch='Gen_wb_b_Charge',
+                                    #outputName='Reco_GenAsymBin',
+                                    #mass=top_mass,
+                                    #masswindow=offshell_mass_window
+                               #))
 ]
 
 
 
-step2 = PostProcessor(
+if not isData:
+    storeVariables = [
+    [lambda tree: tree.branch("PV_npvs", "I"), lambda tree,
+     event: tree.fillBranch("PV_npvs", event.PV_npvs)],
+    [lambda tree: tree.branch("PV_npvsGood", "I"), lambda tree,
+     event: tree.fillBranch("PV_npvsGood", event.PV_npvsGood)],
+    [lambda tree: tree.branch("fixedGridRhoFastjetAll", "F"), lambda tree,
+     event: tree.fillBranch("fixedGridRhoFastjetAll",
+                            event.fixedGridRhoFastjetAll)],
+    ]
+
+    storeVariables.append([lambda tree: tree.branch("genweight", "F"),
+                           lambda tree,
+                           event: tree.fillBranch("genweight",
+                           event.Generator_weight)])
+
+    if args.isSignal:
+        for coupling in range(1,106):
+            storeVariables.append([
+                lambda tree, coupling=coupling: tree.branch('LHEWeights_width_%i'%coupling,'F'),
+                lambda tree, event, coupling=coupling: tree.fillBranch('LHEWeights_width_%i'%coupling,getattr(event,"LHEWeights_width_%i"%coupling)),
+            ])
+
+    analyzerChain.append(EventInfo(storeVariables=storeVariables))
+
+
+workflow = PostProcessor(
     args.output[0],
     args.inputFiles,
-    postfix='_2',
-    cut=leptonselection,
-    modules=step2_analyzerChain,
-    friend=False,
-    outputbranchsel=None if args.nofilter else 'processors/step2.txt',
+    postfix='_WbWbX',
+    cut=triggers,
+    modules=analyzerChain,
+    friend=True,
+    outputbranchsel=None if args.nofilter else 'processors/WbWbX_filter.txt',
     maxEntries=args.maxEntries,
 )
-
-
-
-##############
-##  STEP 3  ##
-##############
-
-
-
-step3_analyzerChain = [
-
-    # Wb reco
-    WbReconstruction(
-        bjetCollectionName = 'BJet',
-        WbosonCollectionName = 'Reco_w',
-        jetchargeName='GenCharge', #TODO replace with charge from b charge tagger
-        outputName='Reco_wb'
-    ),
-
-    # apply binning for asymmetry
-    AsymBinProducer(
-        massBranch='Reco_wb_mass',
-        chargeBranch='Reco_wb_bjet_charge',
-        outputName='Reco_AsymBin',
-        mass=topmass,
-        masswindow=masswindow
-    ),
-]
-
-# generator distributions
-if args.isSignal:
-    # add smeared truth charge
-    step3_analyzerChain.append(ChargeSmearProducer(
-                                    chargeBranch='Gen_wb_b_Charge',
-                                    efficiency=0.66
-                                ))
-
-    # calculate asymmetry for (smeared) generator truth
-    step3_analyzerChain.append(AsymBinProducer(
-                                    massBranch='Gen_wb_mass',
-                                    chargeBranch='Gen_wb_b_Charge',
-                                    outputName='Reco_GenAsymBin',
-                                    mass=topmass,
-                                    masswindow=masswindow
-                               ))
-    step3_analyzerChain.append(AsymBinProducer(
-                                    massBranch='Gen_wb_mass',
-                                    chargeBranch='Gen_wb_b_Charge_smeared',
-                                    outputName='Reco_smearedGenAsymBin',
-                                    mass=topmass,
-                                    masswindow=masswindow
-                               ))
-
-
-
-
-
-
-
-step3 = PostProcessor(
-    args.output[0],
-    args.inputFiles,
-    postfix='_3',
-    cut=selection,
-    modules=step3_analyzerChain,
-    friend=False,
-    outputbranchsel=None if args.nofilter else 'processors/step3.txt',
-    maxEntries=args.maxEntries,
-)
-
-
 
 
 # Run analysis
-
-if args.step == 0:
-    print('Nothing todo. Take a break!')
-elif args.step == 1:
-    step1.run()
-elif args.step == 2:
-    step2.run()
-elif args.step == 3:
-    step3.run()
-else:
-    print('Step not specified. Mismatch!')
+workflow.run()

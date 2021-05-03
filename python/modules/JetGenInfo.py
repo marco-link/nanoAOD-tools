@@ -13,10 +13,9 @@ from utils import deltaPhi
 
 
 class JetGenInfo(Module):
-    def __init__(self, inputCollection, outputName, globalOptions={}):
+    def __init__(self, inputCollection, outputName):
         self.inputCollection = inputCollection
         self.outputName = outputName
-        self.globalOptions = globalOptions
 
     def beginJob(self):
         pass

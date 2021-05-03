@@ -37,6 +37,7 @@ class WbosonReconstruction(Module):
         self.out.branch(self.outputName + '_pt', 'F', lenVar="n"+self.outputName)
         self.out.branch(self.outputName + '_eta', 'F', lenVar="n"+self.outputName)
         self.out.branch(self.outputName + '_phi', 'F', lenVar="n"+self.outputName)
+        self.out.branch(self.outputName + '_charge', 'I', lenVar="n"+self.outputName)
 
         self.out.branch(self.outputName + '_met_pt', 'F', lenVar="n"+self.outputName)
         self.out.branch(self.outputName + '_met_eta', 'F', lenVar="n"+self.outputName)
@@ -44,7 +45,6 @@ class WbosonReconstruction(Module):
 
         self.out.branch(self.outputName + '_met_lepton_deltaPhi', 'F', lenVar="n"+self.outputName)
         self.out.branch(self.outputName + '_mtw', 'F', lenVar="n"+self.outputName)
-
 
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -72,6 +72,7 @@ class WbosonReconstruction(Module):
         self.out.fillBranch(self.outputName + '_pt', map(lambda W: W.Pt(), W_candidates))
         self.out.fillBranch(self.outputName + '_eta', map(lambda W: W.Eta(), W_candidates))
         self.out.fillBranch(self.outputName + '_phi', map(lambda W: W.Phi(), W_candidates))
+        self.out.fillBranch(self.outputName + '_charge', map(lambda W: self.leptonObject(event).charge, W_candidates))
 
         self.out.fillBranch(self.outputName + '_met_pt', map(lambda met: met.Pt(), nu_candidates))
         self.out.fillBranch(self.outputName + '_met_eta', map(lambda met: met.Eta(), nu_candidates))

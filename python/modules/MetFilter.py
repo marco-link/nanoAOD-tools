@@ -9,9 +9,13 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collect
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 class MetFilter(Module):
-    def __init__(self,globalOptions={"isData":False}, outputName=None):
-        self.globalOptions=globalOptions
+    def __init__(self, isData=None, outputName=None):
         self.outputName=outputName
+
+        if isData is None:
+            raise Exception("MetFilter requires argument 'isData'")
+        else:
+            self.isData=isData
 
     def beginJob(self):
         pass
@@ -41,7 +45,7 @@ class MetFilter(Module):
             return False
         if event.Flag_BadPFMuonFilter==0:
             return False
-        if self.globalOptions["isData"] and event.Flag_eeBadScFilter==0: #not suggested on MC
+        if self.isData and event.Flag_eeBadScFilter==0: #not suggested on MC
             return False
         if event.Flag_ecalBadCalibFilter == 0:
             return False

@@ -9,7 +9,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collect
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 
-class CalcVar(Module):
+class CalculateVariable(Module):
     def __init__(self, function, outputName, vartype='F'):
         self.function = function
         self.outputName = outputName

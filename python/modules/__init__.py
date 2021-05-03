@@ -7,7 +7,8 @@ if (ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")!=0):
 
 from EventSkim import EventSkim
 from EventInfo import EventInfo
-from CalcVar import CalcVar
+from CalculateVariable import CalculateVariable
+from DummyModule import DummyModule
 from MuonSelection import MuonSelection
 from MuonVeto import MuonVeto
 from SingleMuonTriggerSelection import SingleMuonTriggerSelection
@@ -17,14 +18,13 @@ from WbReconstruction import WbReconstruction
 from MetFilter import MetFilter
 from SimpleJetChargeSum import SimpleJetChargeSum
 from ChargeTagging import ChargeTagging
-from BTagSelection import BTagSelection
 from JetGenInfo import JetGenInfo
 from TopReconstruction import TopReconstruction
 from WbGen import WbGenProducer
 from JetGenCharge import JetGenChargeProducer
 from AsymBin import AsymBinProducer
-from ChargeSmear import ChargeSmearProducer
-from Tagger import TagJetProducer
+from BTagSelection import BTagSelection
+from Tagger import Tagger
 from ParticleLevel import ParticleLevel
 from PartonLevel import PartonLevel
 from XGBEvaluation import XGBEvaluation

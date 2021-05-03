@@ -26,11 +26,8 @@ class JetSelection(Module):
          jetMaxEta=4.8,
          dRCleaning=0.4,
          storeKinematics=['pt', 'eta'],
-         globalOptions={"isData": False, "year": 2016},
          jetId=LOOSE
      ):
-        self.globalOptions = globalOptions
-
         self.inputCollection = inputCollection
         self.leptonCollectionDRCleaning = leptonCollectionDRCleaning
         self.outputName = outputName

@@ -16,15 +16,25 @@ class SingleMuonTriggerSelection(Module):
         inputCollection = lambda event: getattr(event,"tightMuons"),
         storeWeights=True,
         outputName = "IsoMuTrigger",
-        globalOptions={"isData":False, "year":2016}
+        isData=None,
+        year=None
     ):
-        self.globalOptions = globalOptions
         self.inputCollection = inputCollection
         self.outputName = outputName
         self.storeWeights = storeWeights
 
-        if not self.globalOptions["isData"]:
-            if self.globalOptions["year"] == 2016:
+        if isData is None:
+            raise Exception("SingleMuonTriggerSelection requires argument 'isData'")
+        else:
+            self.isData=isData
+
+        if year is None:
+            raise Exception("SingleMuonTriggerSelection requires argument 'year'")
+        else:
+            self.year = year
+
+        if not self.isData:
+            if self.year == 2016:
 
                 triggerSFBToF = getHist(
                     "PhysicsTools/NanoAODTools/data/muon/2016/EfficienciesAndSF_RunBtoF.root",
@@ -41,14 +51,14 @@ class SingleMuonTriggerSelection(Module):
                     16226.5/35916.4
                 )
 
-            elif self.globalOptions["year"] == 2017:
+            elif self.year == 2017:
 
                 self.triggerSFHist = getHist(
                     "PhysicsTools/NanoAODTools/data/muon/2017/EfficienciesStudies_2017_trigger_EfficienciesAndSF_RunBtoF_Nov17Nov2017.root",
                     "IsoMu27_PtEtaBins/pt_abseta_ratio"
                 )
    
-            elif self.globalOptions["year"] == 2018:
+            elif self.year == 2018:
 
                 self.triggerSFHist = getHist(
                     "PhysicsTools/NanoAODTools/data/muon/2018/EfficienciesStudies_2018_trigger_EfficienciesAndSF_2018Data_AfterMuonHLTUpdate.root",
@@ -70,7 +80,7 @@ class SingleMuonTriggerSelection(Module):
         
         self.out.branch(self.outputName+"_flag","I")
         
-        if not self.globalOptions["isData"] and self.storeWeights:
+        if not self.isData and self.storeWeights:
             self.out.branch(self.outputName+"_weight_trigger_nominal","F")
             self.out.branch(self.outputName+"_weight_trigger_up","F")
             self.out.branch(self.outputName+"_weight_trigger_down","F")
@@ -88,7 +98,7 @@ class SingleMuonTriggerSelection(Module):
         weight_trigger_up = 1.
         weight_trigger_down = 1.
         
-        if (not self.globalOptions["isData"]) and len(muons)>0 and self.storeWeights: 
+        if (not self.isData) and len(muons)>0 and self.storeWeights:
             weight_trigger,weight_trigger_err = getSFXY(self.triggerSFHist,muons[0].pt,abs(muons[0].eta))
             weight_trigger_nominal*=weight_trigger
             weight_trigger_up*=(weight_trigger+weight_trigger_err)
@@ -96,18 +106,18 @@ class SingleMuonTriggerSelection(Module):
 
         trigger_flag = 0
 
-        if self.globalOptions["year"] == 2016:
+        if self.year == 2016:
             trigger_flag = event.HLT_IsoMu24>0 or event.HLT_IsoTkMu24>0
 
-        elif self.globalOptions["year"] == 2017:
+        elif self.year == 2017:
             trigger_flag = event.HLT_IsoMu27>0 or event.HLT_IsoMu24>0
 
-        elif self.globalOptions["year"] == 2018:
+        elif self.year == 2018:
             trigger_flag = event.HLT_IsoMu24
 
         self.out.fillBranch(self.outputName+"_flag", trigger_flag)
             
-        if not self.globalOptions["isData"] and self.storeWeights:
+        if not self.isData and self.storeWeights:
             self.out.fillBranch(self.outputName+"_weight_trigger_nominal",weight_trigger_nominal)
             self.out.fillBranch(self.outputName+"_weight_trigger_up",weight_trigger_up)
             self.out.fillBranch(self.outputName+"_weight_trigger_down",weight_trigger_down)

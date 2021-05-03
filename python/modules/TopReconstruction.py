@@ -23,7 +23,6 @@ class TopReconstruction(Module):
          wbosonCollection=lambda event: [],
          metObject=lambda event: Object("MET"),
          outputName="top",
-         globalOptions={"isData": False, "year": 2016},
      ):
         self.bJetCollection = bJetCollection
         self.lJetCollection = lJetCollection
@@ -32,8 +31,7 @@ class TopReconstruction(Module):
         self.metObject = metObject
         
         self.outputName = outputName
-        self.globalOptions = globalOptions
-        
+
 
 
     def beginJob(self):

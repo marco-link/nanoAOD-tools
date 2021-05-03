@@ -11,21 +11,19 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from utils import deltaR, deltaPhi
 
 
-class TagJetProducer(Module):
+class Tagger(Module):
     def __init__(self,
-                 JetCollectionName = 'Jet',
-                 TagJetOutputName = 'BJet',
-                 NonTagJetOutputName = 'NonBJet',
-                 storeVariables = ['mass', 'pt', 'eta', 'phi'],
-                 tagger = 'btagDeepFlavB',
-                 WP = -1):
-
-        self.JetCollectionName = JetCollectionName
-        self.TagJetOutputName = TagJetOutputName
-        self.NonTagJetOutputName = NonTagJetOutputName
-        self.storeVariables = storeVariables
-        self.tagger = tagger
-        self.WP = WP
+            inputCollection=lambda event: Collection(event, 'Jet'),
+            TagOutputName = 'BJet',
+            NonTagOutputName = 'NonBJet',
+            storeKinematics = ['mass', 'pt', 'eta', 'phi'],
+            taggerFct = lambda obj: obj.btagDeepFlavB > 0.7,
+                ):
+        self.inputCollection = inputCollection
+        self.TagOutputName = TagOutputName
+        self.NonTagOutputName = NonTagOutputName
+        self.storeKinematics = storeKinematics
+        self.taggerFct = taggerFct
 
 
     def beginJob(self):
@@ -39,12 +37,12 @@ class TagJetProducer(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
 
-        self.out.branch('n'+self.TagJetOutputName, 'I')
-        self.out.branch('n'+self.NonTagJetOutputName, 'I')
+        self.out.branch('n'+self.TagOutputName, 'I')
+        self.out.branch('n'+self.NonTagOutputName, 'I')
 
-        for variable in self.storeVariables:
-            self.out.branch(self.TagJetOutputName + '_' + variable, 'F', lenVar='n'+self.TagJetOutputName)
-            self.out.branch(self.NonTagJetOutputName + '_' + variable, 'F', lenVar='n'+self.NonTagJetOutputName)
+        for variable in self.storeKinematics:
+            self.out.branch(self.TagOutputName + '_' + variable, 'F', lenVar='n'+self.TagOutputName)
+            self.out.branch(self.NonTagOutputName + '_' + variable, 'F', lenVar='n'+self.NonTagOutputName)
 
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -54,27 +52,23 @@ class TagJetProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail, go to next event)"""
 
-        jets = Collection(event, self.JetCollectionName)
-
-
-        tagJets = []
-        NontagJets = []
-
+        tag = []
+        Nontag = []
 
         # apply tagging
-        for jet in jets:
-            if getattr(jet, self.tagger) > self.WP:
-                tagJets.append(jet)
+        for obj in self.inputCollection(event):
+            if self.taggerFct(obj):
+                tag.append(obj)
             else:
-                NontagJets.append(jet)
+                Nontag.append(obj)
 
 
         # save output
-        self.out.fillBranch('n'+self.TagJetOutputName, len(tagJets))
-        self.out.fillBranch('n'+self.NonTagJetOutputName, len(NontagJets))
+        self.out.fillBranch('n'+self.TagOutputName, len(tag))
+        self.out.fillBranch('n'+self.NonTagOutputName, len(Nontag))
 
-        for variable in self.storeVariables:
-            self.out.fillBranch(self.TagJetOutputName + '_' + variable, map(lambda jet: getattr(jet, variable), tagJets))
-            self.out.fillBranch(self.NonTagJetOutputName + '_' + variable, map(lambda jet: getattr(jet, variable), NontagJets))
+        for variable in self.storeKinematics:
+            self.out.fillBranch(self.TagOutputName + '_' + variable, map(lambda obj: getattr(obj, variable), tag))
+            self.out.fillBranch(self.NonTagOutputName + '_' + variable, map(lambda obj: getattr(obj, variable), Nontag))
 
         return True
