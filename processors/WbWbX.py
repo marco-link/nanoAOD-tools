@@ -127,7 +127,7 @@ analyzerChain = [
 
 
 
-    EventSkim(selection = lambda event: event.ntightMuons==1 or event.nElectron==1),
+    EventSkim(selection = lambda event: event.ntightMuons == 1 or event.nElectron == 1),
 
 
     ########
@@ -141,7 +141,7 @@ analyzerChain = [
         jetMaxEta=4.7,
         jetId=JetSelection.LOOSE,
         outputName='nominal_selectedJets',
-        storeKinematics=['mass',  'pt','eta', 'phi', 'partonFlavour', 'btagDeepFlavB'],
+        storeKinematics=['mass',  'pt', 'eta', 'phi', 'partonFlavour', 'btagDeepFlavB'],
     ),
 
     # TODO BTagging SF
@@ -152,7 +152,7 @@ analyzerChain = [
         jetMinPt=30.,
         jetMaxEta=2.4,
         storeKinematics=['mass', 'pt', 'eta', 'phi', 'partonFlavour', 'btagDeepFlavB'],
-        taggerFct=lambda obj: obj.btagDeepFlavB>tightWP and obj.pt>30 and obj.eta < 2.4,
+        taggerFct = lambda obj: obj.btagDeepFlavB > tightWP and obj.pt > 30 and abs(obj.eta) < 2.4,
     ),
 
     EventSkim(selection = lambda event: event.nnominal_selectedBJets    == 1 or (event.nnominal_selectedBJets    == 2 and event.nominal_selectedBJets[1].pt    < 50)),
@@ -220,6 +220,105 @@ analyzerChain = [
         vartype='F'
     ),
     EventSkim(selection=lambda event: event.Reco_WNonB_mass > 140),
+
+
+
+
+    #WbReconstruction(
+        #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        #outputName = 'Reco_Wb1',
+        #WbosonSelection = WbReconstruction.RANDOM,
+        #BSelection = WbReconstruction.RANDOM,
+        #top_mass = top_mass,
+        #offshell_mass_window = offshell_mass_window,
+    #),
+
+    #WbReconstruction(
+        #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        #outputName = 'Reco_Wb2',
+        #WbosonSelection = WbReconstruction.RANDOM,
+        #BSelection = WbReconstruction.TOP_BIAS,
+        #top_mass = top_mass,
+        #offshell_mass_window = offshell_mass_window,
+    #),
+
+    #WbReconstruction(
+        #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        #outputName = 'Reco_Wb3',
+        #WbosonSelection = WbReconstruction.RANDOM,
+        #BSelection = WbReconstruction.HIGH_PT,
+        #top_mass = top_mass,
+        #offshell_mass_window = offshell_mass_window,
+    #),
+
+
+
+    #WbReconstruction(
+        #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        #outputName = 'Reco_Wb4',
+        #WbosonSelection = WbReconstruction.TOP_BIAS,
+        #BSelection = WbReconstruction.RANDOM,
+        #top_mass = top_mass,
+        #offshell_mass_window = offshell_mass_window,
+    #),
+
+    #WbReconstruction(
+        #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        #outputName = 'Reco_Wb5',
+        #WbosonSelection = WbReconstruction.TOP_BIAS,
+        #BSelection = WbReconstruction.TOP_BIAS,
+        #top_mass = top_mass,
+        #offshell_mass_window = offshell_mass_window,
+    #),
+
+    #WbReconstruction(
+        #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        #outputName = 'Reco_Wb6',
+        #WbosonSelection = WbReconstruction.TOP_BIAS,
+        #BSelection = WbReconstruction.HIGH_PT,
+        #top_mass = top_mass,
+        #offshell_mass_window = offshell_mass_window,
+    #),
+
+
+
+    #WbReconstruction(
+        #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        #outputName = 'Reco_Wb7',
+        #WbosonSelection = WbReconstruction.LOW_MET_PZ,
+        #BSelection = WbReconstruction.RANDOM,
+        #top_mass = top_mass,
+        #offshell_mass_window = offshell_mass_window,
+    #),
+
+    #WbReconstruction(
+        #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        #outputName = 'Reco_Wb8',
+        #WbosonSelection = WbReconstruction.LOW_MET_PZ,
+        #BSelection = WbReconstruction.TOP_BIAS,
+        #top_mass = top_mass,
+        #offshell_mass_window = offshell_mass_window,
+    #),
+
+    #WbReconstruction(
+        #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+        #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+        #outputName = 'Reco_Wb9',
+        #WbosonSelection = WbReconstruction.LOW_MET_PZ,
+        #BSelection = WbReconstruction.HIGH_PT,
+        #top_mass = top_mass,
+        #offshell_mass_window = offshell_mass_window,
+    #),
+
+
 
 
 

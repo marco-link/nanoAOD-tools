@@ -79,7 +79,7 @@ class WbReconstruction(Module):
             met0.SetPtEtaPhiM(wbosons[0].met_pt, wbosons[0].met_eta, wbosons[0].met_phi, 0)
             met1.SetPtEtaPhiM(wbosons[1].met_pt, wbosons[1].met_eta, wbosons[1].met_phi, 0)
 
-            if met0.Pz() < met1.Pz():
+            if abs(met0.Pz()) < abs(met1.Pz()):
                 W_idx = 0
             else:
                 W_idx = 1

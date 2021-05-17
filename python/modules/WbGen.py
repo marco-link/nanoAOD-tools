@@ -14,12 +14,12 @@ class WbGenProducer(Module):
 
         self.dRmax = dRmax
 
-        self.genBranchName = "Gen_wb"
-        self.wBranchName = self.genBranchName + "_w_"
+        self.genBranchName = "Gen_Wb"
+        self.wBranchName = self.genBranchName + "_W_"
         self.bquarkBranchName = self.genBranchName + "_b_"
-        self.wdauBranchName = self.genBranchName + "_wdau_"
+        self.wdauBranchName = self.genBranchName + "_Wdau_"
 
-        self.genjetBranchName = "GenJet_wb"
+        self.genjetBranchName = "GenJet_Wb"
         self.bquarkjetBranchName = self.genjetBranchName + "_bjet_"
         self.nonmatchedjetBranchName = self.genjetBranchName + "_nonmatched"
 
