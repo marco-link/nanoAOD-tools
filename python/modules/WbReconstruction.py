@@ -52,6 +52,7 @@ class WbReconstruction(Module):
         self.out.branch(self.outputName + '_mass', 'F')
 
         self.out.branch(self.outputName + '_onshell', 'I')
+        self.out.branch(self.outputName + '_chargeCorrelation', 'I')
 
 
 
@@ -64,8 +65,6 @@ class WbReconstruction(Module):
         bjets = self.bjetCollection(event)
 
         W_idx, b_idx = -99, -99
-
-
 
 
         if len(wbosons) == 1:
@@ -134,19 +133,24 @@ class WbReconstruction(Module):
 
 
 
-
-
-
-        Wb = wbosons[W_idx].p4() + bjets[b_idx].p4()
         self.out.fillBranch(self.outputName + '_W_idx', W_idx)
         self.out.fillBranch(self.outputName + '_b_idx', b_idx)
 
-        self.out.fillBranch(self.outputName + '_pt', Wb.Pt())
-        self.out.fillBranch(self.outputName + '_eta', Wb.Eta())
-        self.out.fillBranch(self.outputName + '_phi', Wb.Phi())
-        self.out.fillBranch(self.outputName + '_mass', Wb.M())
+        if W_idx >=0 and b_idx>=0:
+            Wb = wbosons[W_idx].p4() + bjets[b_idx].p4()
+            self.out.fillBranch(self.outputName + '_pt', Wb.Pt())
+            self.out.fillBranch(self.outputName + '_eta', Wb.Eta())
+            self.out.fillBranch(self.outputName + '_phi', Wb.Phi())
+            self.out.fillBranch(self.outputName + '_mass', Wb.M())
 
-        self.out.fillBranch(self.outputName + '_onshell', 1 if abs(Wb.M() - self.top_mass) < self.offshell_mass_window else 0)
+            self.out.fillBranch(self.outputName + '_onshell', 1 if abs(Wb.M() - self.top_mass) < self.offshell_mass_window else 0)
 
+            chargecorr = wbosons[W_idx].charge * bjets[b_idx].charge
+            if chargecorr > 0:
+                self.out.fillBranch(self.outputName + '_chargeCorrelation', 1)
+            elif chargecorr < 0:
+                self.out.fillBranch(self.outputName + '_chargeCorrelation', -1)
+            else:
+                self.out.fillBranch(self.outputName + '_chargeCorrelation', 0)
 
         return True

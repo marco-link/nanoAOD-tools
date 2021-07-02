@@ -20,7 +20,6 @@ from SimpleJetChargeSum import SimpleJetChargeSum
 from ChargeTagging import ChargeTagging
 from JetGenInfo import JetGenInfo
 from TopReconstruction import TopReconstruction
-from WbGen import WbGenProducer
 from JetGenCharge import JetGenChargeProducer
 from AsymBin import AsymBinProducer
 from BTagSelection import BTagSelection
