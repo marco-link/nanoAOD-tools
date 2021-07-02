@@ -7,7 +7,7 @@ process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(),
                             # lumisToProcess=cms.untracked.VLuminosityBlockRange("254231:1-254231:24")
                             )
-process.source.fileNames = ['../../NanoAOD/test/blabla.root' ##you can change only this line
+process.source.fileNames = ['blabla.root' ##you can change only this line
                             ]
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
 process.output = cms.OutputModule("PoolOutputModule", fileName = cms.untracked.string('tree.root'))

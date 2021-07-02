@@ -10,3 +10,8 @@ build
 *.pcm
 
 *.root
+
+crab/crab.log
+crab/crab_*
+crab/20*.py
+crab/samples.txt
