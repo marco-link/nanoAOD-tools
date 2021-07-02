@@ -20,115 +20,123 @@ class PartonLevel(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
-        self.out.branch('partonLevel_lepton_pt', "F")
-        self.out.branch('partonLevel_lepton_eta', "F")
-        self.out.branch('partonLevel_lepton_pdgId', "I")
 
-        self.out.branch('partonLevel_w_pt', "F")
-        self.out.branch('partonLevel_w_eta', "F")
-        self.out.branch('partonLevel_w_charge', "I")
-        
-        #self.out.branch('partonLevel_q_pt', "F")
-        #self.out.branch('partonLevel_q_eta', "F")
-        
-        self.out.branch('partonLevel_b_pt', "F")
-        self.out.branch('partonLevel_b_eta', "F")
-        self.out.branch('partonLevel_b_charge', "I")
-        
+        self.out.branch('npartonLevel_W', "I")
+        self.out.branch('partonLevel_W_charge', "I", lenVar='npartonLevel_W')
+        self.out.branch('partonLevel_W_pt', "F", lenVar='npartonLevel_W')
+        self.out.branch('partonLevel_W_eta', "F", lenVar='npartonLevel_W')
+        self.out.branch('partonLevel_W_phi', "F", lenVar='npartonLevel_W')
+        self.out.branch('partonLevel_W_mass', "F", lenVar='npartonLevel_W')
+
+        self.out.branch("partonLevel_Wdau_pt", "F", 2)
+        self.out.branch("partonLevel_Wdau_eta", "F", 2)
+        self.out.branch("partonLevel_Wdau_phi", "F", 2)
+        self.out.branch("partonLevel_Wdau_mass", "F", 2)
+        self.out.branch("partonLevel_Wdau_pdgId", "I", 2)
+
+        self.out.branch('npartonLevel_bquarks', 'I')
+        self.out.branch('partonLevel_bquarks_pt', "F", lenVar='npartonLevel_bquarks')
+        self.out.branch('partonLevel_bquarks_eta', "F", lenVar='npartonLevel_bquarks')
+        self.out.branch('partonLevel_bquarks_phi', "F", lenVar='npartonLevel_bquarks')
+        self.out.branch('partonLevel_bquarks_mass', "F", lenVar='npartonLevel_bquarks')
+        self.out.branch('partonLevel_bquarks_charge', "I", lenVar='npartonLevel_bquarks')
+
         self.out.branch('partonLevel_top_pt', "F")
-        self.out.branch('partonLevel_top_rapidity', "F")
+        self.out.branch('partonLevel_top_eta', "F")
+        self.out.branch('partonLevel_top_phi', "F")
+        self.out.branch('partonLevel_top_mass', "F")
 
-        self.out.branch('partonLevel_chargeCorrelation', "F")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
 
     def analyze(self, event):
-        """process event, return True (go to next module) or False (fail, go to next event)"""
-    
         genParticles = Collection(event,"GenPart")
-        wboson = None
-        lepton = None
-        top = None
+
+        w_idx = None
+        wdaus = []
         bquarks = []
-        lquarks = []
-        for genParticle in genParticles:
-            if not (fromHardProcess(genParticle)):
+        top = None
+
+        for idx, particle in enumerate(genParticles):
+            if not (fromHardProcess(particle)):
                 continue
-                
-            if abs(genParticle.pdgId)==24 and isLastCopy(genParticle):
-                if wboson!=None:
-                    print "WARNING - multiple W boson at gen level"
-                wboson = genParticle
-            
-            if (abs(genParticle.pdgId) in [11,13,15]) and isLastCopy(genParticle) and isPrompt(genParticle):
-                if lepton!=None:
-                    print "WARNING - multiple leptons at gen level"
-                lepton = genParticle
-                
-            if abs(genParticle.pdgId)==6 and isLastCopy(genParticle):
+
+            # skip initial partons
+            if particle.status == 21:
+                continue
+
+            # furthermore, skip also particles that appear out of nowhere
+            if particle.genPartIdxMother == -1:
+                continue
+
+            if abs(particle.pdgId)==24 and isLastCopy(particle):
+                if w_idx != None:
+                    print("WARNING - multiple W boson at parton level")
+                w_idx = idx
+
+            if particle.genPartIdxMother == w_idx:
+                wdaus.append(particle)
+
+            if abs(particle.pdgId)==5 and isLastCopy(particle):
+                bquarks.append(particle)
+
+            if abs(particle.pdgId)==6 and isLastCopy(particle):
                 if top!=None:
                     print "WARNING - multiple tops at gen level"
-                top = genParticle
-            
-            if (abs(genParticle.pdgId) in [1,2,3,4]) and isLastCopy(genParticle):
-                lquarks.append(genParticle)
-                
-            if abs(genParticle.pdgId)==5 and isLastCopy(genParticle):
-                bquarks.append(genParticle)
+                top = particle
 
+
+        wboson = genDummy()
+        if w_idx != None:
+            wboson = genParticles[w_idx]
+
+        if len(wdaus) < 2:
+            print("WARNING - Wbau not found")
+            wdaus.append(genDummy())
+
+        if len(bquarks) == 1:
+            bquarks = [genDummy()]
         bquarks = sorted(bquarks,key=lambda x: x.pt, reverse=True)
-        #print top,lepton.pdgId,len(bquarks)#bquarks[0].pdgId,bquarks[1].pdgId
 
-        #filter out bquarks from gluons
-        for bquark in bquarks[:]:
-            motherIdx = bquark.genPartIdxMother
-            while (motherIdx>=0 and abs(genParticles[motherIdx].pdgId)==5):
-                motherIdx = genParticles[motherIdx].genPartIdxMother
-                
-            if (genParticles[motherIdx].pdgId==21):
-                bquarks.remove(bquark)
-            
-        
-        if lepton==None:
-            self.out.fillBranch('partonLevel_lepton_pt', -1)
-            self.out.fillBranch('partonLevel_lepton_eta', 0)
-            self.out.fillBranch('partonLevel_lepton_pdgId', 0)
-        else:
-            self.out.fillBranch('partonLevel_lepton_pt', lepton.pt)
-            self.out.fillBranch('partonLevel_lepton_eta', lepton.eta)
-            self.out.fillBranch('partonLevel_lepton_pdgId', lepton.pdgId)
-            
-        if wboson==None:
-            self.out.fillBranch('partonLevel_w_pt',-1)
-            self.out.fillBranch('partonLevel_w_eta', 0)
-            self.out.fillBranch('partonLevel_w_charge', 0)
-        else:
-            self.out.fillBranch('partonLevel_w_pt', wboson.pt)
-            self.out.fillBranch('partonLevel_w_eta', wboson.eta)
-            self.out.fillBranch('partonLevel_w_charge', getChargeFromPDG(wboson))
-        
-        if len(bquarks)==0:
-            self.out.fillBranch('partonLevel_b_pt', -1)
-            self.out.fillBranch('partonLevel_b_eta', 0)
-            self.out.fillBranch('partonLevel_b_charge', 0)
-           
-        else:
-            self.out.fillBranch('partonLevel_b_pt', bquarks[0].pt)
-            self.out.fillBranch('partonLevel_b_eta', bquarks[0].eta)
-            self.out.fillBranch('partonLevel_b_charge', -1 if bquarks[0].pdgId>0 else 1)
+        if top == None:
+            top = genDummy()
 
-        if top==None:
-            self.out.fillBranch('partonLevel_top_pt', -1)
-            self.out.fillBranch('partonLevel_top_rapidity', 0)
-        else:
-            self.out.fillBranch('partonLevel_top_pt', top.pt)
-            self.out.fillBranch('partonLevel_top_rapidity', top.p4().Rapidity())
-        
-        if lepton!=None and len(bquarks)>0:
-            self.out.fillBranch('partonLevel_chargeCorrelation', (-1 if bquarks[0].pdgId>0 else 1)*getChargeFromPDG(lepton))
-        else:
-            self.out.fillBranch('partonLevel_chargeCorrelation',0)
-            
+
+        self.out.fillBranch('npartonLevel_W', 1)
+        self.out.fillBranch('partonLevel_W_charge', map(lambda w: getChargeFromPDG(w), [wboson]))
+        self.out.fillBranch('partonLevel_W_pt', map(lambda w: w.pt, [wboson]))
+        self.out.fillBranch('partonLevel_W_eta', map(lambda w: w.eta, [wboson]))
+        self.out.fillBranch('partonLevel_W_phi', map(lambda w: w.phi, [wboson]))
+        self.out.fillBranch('partonLevel_W_mass', map(lambda w: w.mass, [wboson]))
+
+        self.out.fillBranch('partonLevel_Wdau_pt', map(lambda wdau: wdau.pt, wdaus))
+        self.out.fillBranch('partonLevel_Wdau_eta', map(lambda wdau: wdau.eta, wdaus))
+        self.out.fillBranch('partonLevel_Wdau_phi', map(lambda wdau: wdau.phi, wdaus))
+        self.out.fillBranch('partonLevel_Wdau_mass', map(lambda wdau: wdau.mass, wdaus))
+        self.out.fillBranch('partonLevel_Wdau_pdgId', map(lambda wdau: wdau.pdgId, wdaus))
+
+
+        def bquarkcharge(quark):
+            c = getChargeFromPDG(quark)
+            if c > 0:
+                return 1
+            elif c < 0:
+                return -1
+            else:
+                return 0
+
+        self.out.fillBranch('npartonLevel_bquarks', len(bquarks))
+        self.out.fillBranch('partonLevel_bquarks_pt', map(lambda quark: quark.pt, bquarks))
+        self.out.fillBranch('partonLevel_bquarks_eta', map(lambda quark: quark.eta, bquarks))
+        self.out.fillBranch('partonLevel_bquarks_phi', map(lambda quark: quark.phi, bquarks))
+        self.out.fillBranch('partonLevel_bquarks_mass', map(lambda quark: quark.mass, bquarks))
+        self.out.fillBranch('partonLevel_bquarks_charge', map(lambda quark: bquarkcharge(quark), bquarks))
+
+        self.out.fillBranch('partonLevel_top_pt', top.pt)
+        self.out.fillBranch('partonLevel_top_eta', top.eta)
+        self.out.fillBranch('partonLevel_top_phi', top.phi)
+        self.out.fillBranch('partonLevel_top_mass', top.mass)
+
+
         return True
-
