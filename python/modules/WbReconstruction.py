@@ -6,6 +6,7 @@ import random
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
+from gen_helper import genDummy
 
 
 class WbReconstruction(Module):
@@ -133,24 +134,40 @@ class WbReconstruction(Module):
 
 
 
+
+
+        Wb = None
+        chargecorr = 0
+        onshell = -1
+
+        if W_idx >= 0 and b_idx >= 0 and wbosons[W_idx].pt > 0 and bjets[b_idx].pt > 0:
+            Wb = wbosons[W_idx].p4() + bjets[b_idx].p4()
+            chargecorr = wbosons[W_idx].charge * bjets[b_idx].charge
+
+            if abs(Wb.M() - self.top_mass) < self.offshell_mass_window:
+                onshell = 1
+            else:
+                onshell = 0
+        else:
+            W_idx = -1
+            b_idx = -1
+            Wb = genDummy()
+
+
         self.out.fillBranch(self.outputName + '_W_idx', W_idx)
         self.out.fillBranch(self.outputName + '_b_idx', b_idx)
 
-        if W_idx >=0 and b_idx>=0:
-            Wb = wbosons[W_idx].p4() + bjets[b_idx].p4()
-            self.out.fillBranch(self.outputName + '_pt', Wb.Pt())
-            self.out.fillBranch(self.outputName + '_eta', Wb.Eta())
-            self.out.fillBranch(self.outputName + '_phi', Wb.Phi())
-            self.out.fillBranch(self.outputName + '_mass', Wb.M())
+        self.out.fillBranch(self.outputName + '_pt', Wb.Pt())
+        self.out.fillBranch(self.outputName + '_eta', Wb.Eta())
+        self.out.fillBranch(self.outputName + '_phi', Wb.Phi())
+        self.out.fillBranch(self.outputName + '_mass', Wb.M())
+        self.out.fillBranch(self.outputName + '_onshell', onshell)
 
-            self.out.fillBranch(self.outputName + '_onshell', 1 if abs(Wb.M() - self.top_mass) < self.offshell_mass_window else 0)
-
-            chargecorr = wbosons[W_idx].charge * bjets[b_idx].charge
-            if chargecorr > 0:
-                self.out.fillBranch(self.outputName + '_chargeCorrelation', 1)
-            elif chargecorr < 0:
-                self.out.fillBranch(self.outputName + '_chargeCorrelation', -1)
-            else:
-                self.out.fillBranch(self.outputName + '_chargeCorrelation', 0)
+        if chargecorr > 0:
+            self.out.fillBranch(self.outputName + '_chargeCorrelation', 1)
+        elif chargecorr < 0:
+            self.out.fillBranch(self.outputName + '_chargeCorrelation', -1)
+        else:
+            self.out.fillBranch(self.outputName + '_chargeCorrelation', 0)
 
         return True

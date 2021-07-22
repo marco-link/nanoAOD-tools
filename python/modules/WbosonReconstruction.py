@@ -7,6 +7,9 @@ import scipy.optimize
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
+from gen_helper import genDummy
+
+
 class WbosonReconstruction(Module):
     def __init__(self,
         leptonObject = lambda event: Collection(event,"Muon")[0],
@@ -43,7 +46,7 @@ class WbosonReconstruction(Module):
         self.out.branch(self.outputName + '_met_eta', 'F', lenVar="n"+self.outputName)
         self.out.branch(self.outputName + '_met_phi', 'F', lenVar="n"+self.outputName)
 
-        self.out.branch(self.outputName + '_met_lepton_deltaPhi', 'F', lenVar="n"+self.outputName)
+        self.out.branch(self.outputName + '_met_lepton_deltaR', 'F', lenVar="n"+self.outputName)
         self.out.branch(self.outputName + '_mtw', 'F', lenVar="n"+self.outputName)
 
 
@@ -60,11 +63,17 @@ class WbosonReconstruction(Module):
         met = ROOT.TLorentzVector()
         met.SetPtEtaPhiM(self.metObject(event).pt, 0, self.metObject(event).phi, 0)
 
-        W_candidates = []
-        nu_candidates = self.recoMetFromWmass(lepton, met)
+        nu_candidates, W_candidates = [], []
 
-        for nu in nu_candidates:
-            W_candidates.append(nu + lepton)
+        # only reconstruct if lepton and met are valid
+        if self.leptonObject(event).pt > 0 and met.Pt() > 0:
+            nu_candidates = self.recoMetFromWmass(lepton, met)
+            W_candidates = [lepton + nu for nu in nu_candidates]
+        else:
+            nu_candidates = [genDummy()]
+            W_candidates = [genDummy()]
+            print('no valid lepton/MET found for Wboson reconstruction')
+
 
 
         self.out.fillBranch('n' + self.outputName, len(nu_candidates))
@@ -78,7 +87,7 @@ class WbosonReconstruction(Module):
         self.out.fillBranch(self.outputName + '_met_eta', map(lambda met: met.Eta(), nu_candidates))
         self.out.fillBranch(self.outputName + '_met_phi', map(lambda met: met.Phi(), nu_candidates))
 
-        self.out.fillBranch(self.outputName + '_met_lepton_deltaPhi', map(lambda met: met.DeltaPhi(lepton), nu_candidates))
+        self.out.fillBranch(self.outputName + '_met_lepton_deltaR', map(lambda met: met.DeltaR(lepton), nu_candidates))
         self.out.fillBranch(self.outputName + '_mtw', map(lambda met: math.sqrt( 2 * (1 - math.cos(met.DeltaPhi(lepton))) * lepton.Pt() * met.Pt()), nu_candidates))
 
         return True
