@@ -10,10 +10,11 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 
 class CalculateVariable(Module):
-    def __init__(self, function, outputName, vartype='F'):
+    def __init__(self, function, outputName, vartype='F', length=None):
         self.function = function
         self.outputName = outputName
         self.vartype = vartype
+        self.length = length
 
     def beginJob(self):
         pass
@@ -23,7 +24,11 @@ class CalculateVariable(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
-        self.out.branch(self.outputName, self.vartype)
+
+        if self.length is None:
+            self.out.branch(self.outputName, self.vartype)
+        else:
+            self.out.branch(self.outputName, self.vartype, lenVar=self.length)
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
