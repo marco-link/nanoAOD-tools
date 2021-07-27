@@ -1,7 +1,7 @@
 import os
 import sys
 import math
-import ROOT
+from ROOT import TLorentzVector
 import scipy.optimize
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
@@ -60,7 +60,7 @@ class WbosonReconstruction(Module):
     def analyze(self, event):
         lepton = self.leptonObject(event).p4()
 
-        met = ROOT.TLorentzVector()
+        met = TLorentzVector()
         met.SetPtEtaPhiM(self.metObject(event).pt, 0, self.metObject(event).phi, 0)
 
         nu_candidates, W_candidates = [], []
@@ -220,7 +220,7 @@ class WbosonReconstruction(Module):
             sol1 = lep.Pz() * alpha / lep.Pt()**2 + math.sqrt(rad)
             sol2 = lep.Pz() * alpha / lep.Pt()**2 - math.sqrt(rad)
 
-            nu1, nu2 = ROOT.TLorentzVector(nu), ROOT.TLorentzVector(nu)
+            nu1, nu2 = TLorentzVector(nu), TLorentzVector(nu)
             nu1.SetPz(sol1)
             nu2.SetPz(sol2)
 

@@ -41,6 +41,13 @@ class PartonLevel(Module):
         self.out.branch('partonLevel_bquarks_mass', "F", lenVar='npartonLevel_bquarks')
         self.out.branch('partonLevel_bquarks_charge', "I", lenVar='npartonLevel_bquarks')
 
+        self.out.branch('npartonLevel_bFromTop', 'I')
+        self.out.branch('partonLevel_bFromTop_pt', "F", lenVar='npartonLevel_bFromTop')
+        self.out.branch('partonLevel_bFromTop_eta', "F", lenVar='npartonLevel_bFromTop')
+        self.out.branch('partonLevel_bFromTop_phi', "F", lenVar='npartonLevel_bFromTop')
+        self.out.branch('partonLevel_bFromTop_mass', "F", lenVar='npartonLevel_bFromTop')
+        self.out.branch('partonLevel_bFromTop_charge', "I", lenVar='npartonLevel_bFromTop')
+
         self.out.branch('partonLevel_top_pt', "F")
         self.out.branch('partonLevel_top_eta', "F")
         self.out.branch('partonLevel_top_phi', "F")
@@ -56,7 +63,9 @@ class PartonLevel(Module):
         w_idx = None
         wdaus = []
         bquarks = []
+        top_idx = None
         top = None
+        b_from_top = None
 
         for idx, particle in enumerate(genParticles):
             if not (fromHardProcess(particle)):
@@ -84,8 +93,11 @@ class PartonLevel(Module):
             if abs(particle.pdgId)==6 and isLastCopy(particle):
                 if top!=None:
                     print "WARNING - multiple tops at gen level"
+                top_idx = idx
                 top = particle
 
+            if particle.genPartIdxMother == top_idx and abs(particle.pdgId)==5:
+                b_from_top = particle
 
         wboson = genDummy()
         if w_idx != None:
@@ -101,6 +113,9 @@ class PartonLevel(Module):
 
         if top == None:
             top = genDummy()
+            b_from_top = [genDummy()]
+        else:
+            b_from_top = [b_from_top]
 
 
         self.out.fillBranch('npartonLevel_W', 1)
@@ -132,6 +147,13 @@ class PartonLevel(Module):
         self.out.fillBranch('partonLevel_bquarks_phi', map(lambda quark: quark.phi, bquarks))
         self.out.fillBranch('partonLevel_bquarks_mass', map(lambda quark: quark.mass, bquarks))
         self.out.fillBranch('partonLevel_bquarks_charge', map(lambda quark: bquarkcharge(quark), bquarks))
+
+        self.out.fillBranch('npartonLevel_bFromTop', len(b_from_top))
+        self.out.fillBranch('partonLevel_bFromTop_pt', map(lambda quark: quark.pt, b_from_top))
+        self.out.fillBranch('partonLevel_bFromTop_eta', map(lambda quark: quark.eta, b_from_top))
+        self.out.fillBranch('partonLevel_bFromTop_phi', map(lambda quark: quark.phi, b_from_top))
+        self.out.fillBranch('partonLevel_bFromTop_mass', map(lambda quark: quark.mass, b_from_top))
+        self.out.fillBranch('partonLevel_bFromTop_charge', map(lambda quark: bquarkcharge(quark), b_from_top))
 
         self.out.fillBranch('partonLevel_top_pt', top.pt)
         self.out.fillBranch('partonLevel_top_eta', top.eta)

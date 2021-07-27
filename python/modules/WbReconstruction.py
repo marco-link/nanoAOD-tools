@@ -1,6 +1,6 @@
 import os
 import sys
-import ROOT
+from ROOT import TLorentzVector
 import random
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
@@ -75,7 +75,7 @@ class WbReconstruction(Module):
             W_idx = random.randrange(0, len(wbosons))
 
         elif self.WbosonSelection == WbReconstruction.LOW_MET_PZ:
-            met0, met1 = ROOT.TLorentzVector(), ROOT.TLorentzVector()
+            met0, met1 = TLorentzVector(), TLorentzVector()
             met0.SetPtEtaPhiM(wbosons[0].met_pt, wbosons[0].met_eta, wbosons[0].met_phi, 0)
             met1.SetPtEtaPhiM(wbosons[1].met_pt, wbosons[1].met_eta, wbosons[1].met_phi, 0)
 
@@ -149,8 +149,8 @@ class WbReconstruction(Module):
             else:
                 onshell = 0
         else:
-            W_idx = -1
-            b_idx = -1
+            W_idx = 0
+            b_idx = 0
             Wb = genDummy()
 
 
