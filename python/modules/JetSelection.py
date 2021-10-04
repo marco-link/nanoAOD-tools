@@ -100,8 +100,10 @@ class JetSelection(Module):
 
         self.out.fillBranch("n"+self.outputName, len(selectedJets))
         for variable in self.storeKinematics:
-            self.out.fillBranch(self.outputName+"_"+variable,
-                                map(lambda jet: getattr(jet, variable), selectedJets))
+            self.out.fillBranch(
+                self.outputName+"_"+variable,
+                map(lambda jet: getattr(jet, variable), selectedJets)
+            )
 
         setattr(event, self.outputName, selectedJets)
         setattr(event, self.outputName+"_unselected", unselectedJets)

@@ -23,9 +23,7 @@ class BTagSelection(Module):
          jetMaxEta=2.4,
          storeKinematics=['pt', 'eta'],
          taggerFct = lambda jet: jet.btagDeepFlavB>0.7221,
-         globalOptions={"isData": False, "year": 2016},
      ):
-        self.globalOptions = globalOptions
         self.inputCollection = inputCollection
         self.outputBName = outputBName
         self.outputLName = outputLName

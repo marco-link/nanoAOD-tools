@@ -1,47 +1,95 @@
-# nanoAOD-tools
-Tools for working with NanoAOD (requiring only python + root, not CMSSW)
-
-## Checkout instructions: standalone
-
-You need to setup python 2.7 and a recent ROOT version first.
-
-    git clone https://github.com/WbWbX/nanoAOD-tools.git NanoAODTools
-    cd NanoAODTools
-    bash standalone/env_standalone.sh build
-    source standalone/env_standalone.sh
-
-Repeat only the last command at the beginning of every session.
-
-Please never commit neither the build directory, nor the empty init.py files created by the script.
+# nanoAOD-tools for WbWbX analysis
 
 ## Checkout instructions: CMSSW_11_1_7
 
+'''
     cd $CMSSW_BASE/src
     git clone https://github.com/WbWbX/nanoAOD-tools.git PhysicsTools/NanoAODTools
     cd PhysicsTools/NanoAODTools
     cmsenv
     scram b
+'''
+
+Note that only CMSSW_11_X or higher includes TensorFlow v2.1 which is used for training the b charge tagger. To check which TF version comes with CMSSW use ```scram tool list | grep tensorflow```.
+
 
 ## General instructions to run the post-processing step
 
-The script to run the post-processing step is `scripts/nano_postproc.py`.
+The general post-processing script for producing final ntuples for plotting and statistical interpretation is:
 
-The basic syntax of the command is the following:
+```
+python PhysicsTools/NanoAODTools/processors/ST.py \
+    -i <root input file> --year <year> [--isSignal] [--isData] \
+    <output file name>
+```
 
-    python scripts/nano_postproc.py /path/to/output_directory /path/to/input_tree.root
+The script accepts the following arguments:
+* the input root file is an extended nanoAOD format which includes additional information to evaluate the charge tagger on-the-fly. It is created using the [ChargeReco](https://github.com/WbWbX/ChargeReco) package.
+* `--year` needs to be one of the following: '2016','2016preVFP','2017','2018' (default: '2016')
+* `-isSignal` optional flag to store additional information for the signal (e.g. parton/particle level observables, LHE weights) (default: false)
+* `--isData` optional flag to remove gen-level information when running on data (default: false)
 
-Here is a summary of its features:
-* the `-s`,`--postfix` option is used to specify the suffix that will be appended to the input file name to obtain the output file name. It defaults to *_Friend* in friend mode, *_Skim* in full mode.
-* the `-c`,`--cut` option is used to pass a string expression (using the same syntax as in TTree::Draw) that will be used to select events. It cannot be used in friend mode.
-* the `-J`,`--json` option is used to pass the name of a JSON file that will be used to select events. It cannot be used in friend mode.
-* if run with the `--full` option (default), the output will be a full nanoAOD file. If run with the `--friend` option, instead, the output will be a friend tree that can be attached to the input tree. In the latter case, it is not possible to apply any kind of event selection, as the number of entries in the parent and friend tree must be the same.
-* the `-b`,`--branch-selection` option is used to pass the name of a file containing directives to keep or drop branches from the output tree. The file should contain one directive among `keep`/`drop` (wildcards allowed as in TTree::SetBranchStatus) or `keepmatch`/`dropmatch` (python regexp matching the branch name) per line, as shown in the [this](python/postprocessing/examples/keep_and_drop.txt) example file.
-  * `--bi` and `--bo` allows to specify the keep/drop file separately for input and output trees.  
-* the `--justcount` option will cause the script to printout the number of selected events, without actually writing the output file.
 
-Please run with `--help` for a complete list of options.
+## Analysis modules
 
-## How to write and run modules
+The analysis-specific modules can be found under `PhysicsTools/NanoAODTools/python/modules`.
+In general, the input and output collections of modules should be configurable so that they can be easily reused. A few important ones are
+* MuonSelection/MuonVeto: modules to select tight isolated muon candidates and veto additional loose muons (similar modules exists for electrons). For MC, the module also produces weights to evaluate the uncertainties on the lepton selection and reconstruction efficiencies.
+* JetSelection: module to select jets within acceptance
+* 
+
+
+# Analysis workflow by Marco
+
+Run steps with `python processors/WbWbX.py --input <path to .root file> --step X` with `X=1, 2 or 3`!
+See `python processors/WbWbX.py -h` for more options.
+
+
+## step1
+
+- [x] preskim (background only)
+- [ ] particle selections/filters
+- [ ] additional weights calculation
+- [ ] scale factor calculation
+- [x] Jetcharge from parton flavour
+- [x] Wb generator (signal  only)
+- [x] drop trigger information and more unused variables
+
+
+## step2
+
+- [x] leptonic W reconstruction
+- [x] apply b tagging WP
+- [ ] apply b charge tagger
+- [x] drop special tagger variables
+
+
+## step3
+
+- [x] Event selection
+- [x] Wb reconstruction
+- [x] add smeared truth
+- [x] apply binning for asymmetry
+
+
+## plot (+ unfolding)
+
+
+
+# The Asymmetry binning
+
+-`bin > 0` onshell
+-`bin < 0` offshell
+
+- `abs(bin)==1` negative charge (bottom quark)
+- `abs(bin)==2` positive charge (anti bottom quark)
+
+- `bin == 0` zero charge
+
+
+## General information on nanoaod-tools
+
+### How to write and run modules
 
 It is possible to import modules that will be run on each entry passing the event selection, and can be used to calculate new variables that will be included in the output tree (both in friend and full mode) or to apply event filter decisions.
 
@@ -91,50 +139,3 @@ This module has the same structure of its producer as `exampleProducer`, but in 
 
 
 
-
-# Analysis workflow
-
-Run steps with `python processors/WbWbX.py --input <path to .root file> --step X` with `X=1, 2 or 3`!
-See `python processors/WbWbX.py -h` for more options.
-
-
-## step1
-
-- [x] preskim (background only)
-- [ ] particle selections/filters
-- [ ] additional weights calculation
-- [ ] scale factor calculation
-- [x] Jetcharge from parton flavour
-- [x] Wb generator (signal  only)
-- [x] drop trigger information and more unused variables
-
-
-## step2
-
-- [x] leptonic W reconstruction
-- [x] apply b tagging WP
-- [ ] apply b charge tagger
-- [x] drop special tagger variables
-
-
-## step3
-
-- [x] Event selection
-- [x] Wb reconstruction
-- [x] add smeared truth
-- [x] apply binning for asymmetry
-
-
-## plot (+ unfolding)
-
-
-
-# The Asymmetry binning
-
--`bin > 0` onshell
--`bin < 0` offshell
-
-- `abs(bin)==1` negative charge (bottom quark)
-- `abs(bin)==2` positive charge (anti bottom quark)
-
-- `bin == 0` zero charge
