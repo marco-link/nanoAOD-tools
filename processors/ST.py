@@ -15,6 +15,7 @@ from PhysicsTools.NanoAODTools.modules import *
 
 parser = argparse.ArgumentParser()
 
+
 parser.add_argument('--isData', dest='isData',
                     action='store_true', default=False)
 parser.add_argument('--isSignal', dest='isSignal',
