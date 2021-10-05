@@ -19,6 +19,10 @@ parser.add_argument('--isData', dest='isData',
                     action='store_true', default=False)
 parser.add_argument('--isSignal', dest='isSignal',
                     action='store_true', default=False)
+parser.add_argument('--nosys', dest='nosys',
+                    action='store_true', default=False)
+parser.add_argument('--notagger', dest='notagger',
+                    action='store_true', default=False)
 parser.add_argument('--year', dest='year',
                     action='store', type=str, default='2016', choices=['2016','2016preVFP','2017','2018'])
 parser.add_argument('--nleptons', dest='nleptons',
@@ -30,6 +34,8 @@ args = parser.parse_args()
 
 print "isData:",args.isData
 print "isSignal:",args.isSignal
+print "evaluate systematics:",not args.nosys
+print "evaluate tagger:",not args.notagger
 print "inputs:",len(args.inputFiles)
 print "year:", args.year
 print "output directory:", args.output[0]
@@ -145,6 +151,8 @@ def leptonSequence():
     
 def jetSelection(jetDict):
     seq = []
+    
+    btaggedJetCollections = []
     for systName,jetCollection in jetDict.items():
         seq.append(
             JetSelection(
@@ -160,13 +168,15 @@ def jetSelection(jetDict):
         seq.append(
             BTagSelection(
                 inputCollection=lambda event,sys=systName: getattr(event,"selectedJets_"+sys),
-                outputBName="selectedBJets",
-                outputLName="selectedLJets",
+                outputBName="selectedBJets_"+systName,
+                outputLName="selectedLJets_"+systName,
                 jetMinPt=30.,
                 jetMaxEta=2.4,
+                workingpoint = BTagSelection.TIGHT,
                 storeKinematics=[],
             )
         )
+        btaggedJetCollections.append(lambda event, sys=systName: getattr(event,"selectedBJets_"+sys))
         
     systNames = jetDict.keys()
     seq.append(
@@ -174,8 +184,16 @@ def jetSelection(jetDict):
             any([getattr(event, "nselectedJets_"+systName) > 2 for systName in systNames])
         )
     )
-        
-        
+    
+    seq.append(
+        ChargeTagging(
+            modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
+            featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
+            inputCollections = btaggedJetCollections,
+            taggerName = "bChargeTag",
+        )
+    )
+    
     '''
     if isMC:
         seq.append(
@@ -188,7 +206,11 @@ def jetSelection(jetDict):
     
             
     return seq
-
+    
+    
+def eventReconstruction1l():
+    seq = []
+    return seq
 
 
 analyzerChain = [

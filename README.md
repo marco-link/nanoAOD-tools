@@ -2,15 +2,17 @@
 
 ## Checkout instructions: CMSSW_11_1_7
 
-'''
-    cd $CMSSW_BASE/src
-    git clone https://github.com/WbWbX/nanoAOD-tools.git PhysicsTools/NanoAODTools
+```
+    export SCRAM_ARCH=slc7_amd64_gcc820
+    cmsrel CMSSW_11_1_7
+    cd CMSSW_11_1_7/src
+    git clone -b wbwbxUL git@github.com:<yourname>/nanoAOD-tools.git PhysicsTools/NanoAODTools
     cd PhysicsTools/NanoAODTools
     cmsenv
     scram b
-'''
+```
 
-Note that only CMSSW_11_X or higher includes TensorFlow v2.1 which is used for training the b charge tagger. To check which TF version comes with CMSSW use ```scram tool list | grep tensorflow```.
+Note that only `CMSSW_11_X` or higher includes TensorFlow v2.1 which is used for training the b charge tagger. To check which TF version comes with CMSSW use ```scram tool list | grep tensorflow```.
 
 
 ## General instructions to run the post-processing step
@@ -26,17 +28,20 @@ python PhysicsTools/NanoAODTools/processors/ST.py \
 The script accepts the following arguments:
 * the input root file is an extended nanoAOD format which includes additional information to evaluate the charge tagger on-the-fly. It is created using the [ChargeReco](https://github.com/WbWbX/ChargeReco) package.
 * `--year` needs to be one of the following: '2016','2016preVFP','2017','2018' (default: '2016')
-* `-isSignal` optional flag to store additional information for the signal (e.g. parton/particle level observables, LHE weights) (default: false)
+* `--nleptons` flag to switch between signal (=1) and top quark pair control region (=2) (default: 1)
+* `--isSignal` optional flag to store additional information for the signal (e.g. parton/particle level observables, LHE weights) (default: false)
 * `--isData` optional flag to remove gen-level information when running on data (default: false)
-
+* `--nosys` optional flag to remove all systematics (default: false)
+* `--notagger` optional flag to skip b charge tagger evaluation  (default: false)
 
 ## Analysis modules
 
 The analysis-specific modules can be found under `PhysicsTools/NanoAODTools/python/modules`.
-In general, the input and output collections of modules should be configurable so that they can be easily reused. A few important ones are
+In general, the input and output collections of modules should be configurable so that they can be easily reused, i.e. for evaluating systematics. A few important ones are
 * MuonSelection/MuonVeto: modules to select tight isolated muon candidates and veto additional loose muons (similar modules exists for electrons). For MC, the module also produces weights to evaluate the uncertainties on the lepton selection and reconstruction efficiencies.
+* JetMetUncertinties: module to evalutate JEC/JER/MET uncertainties. Separate collections of objects are created for each variation.
 * JetSelection: module to select jets within acceptance
-* 
+* ChargeTagging: evaluates the b jet charge tagger and attaches the result to the jet object
 
 
 # Analysis workflow by Marco

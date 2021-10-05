@@ -13,6 +13,9 @@ from utils import deltaR, deltaPhi
 
 class BTagSelection(Module):
     #tight DeepFlav WP (https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation2016Legacy)
+    LOOSE=0
+    MEDIUM=1
+    TIGHT=2
     
     def __init__(
          self,
@@ -21,8 +24,8 @@ class BTagSelection(Module):
          outputLName="selectedLJets",
          jetMinPt=30.,
          jetMaxEta=2.4,
+         workingpoint = TIGHT,
          storeKinematics=['pt', 'eta'],
-         taggerFct = lambda jet: jet.btagDeepFlavB>0.7221,
      ):
         self.inputCollection = inputCollection
         self.outputBName = outputBName
@@ -30,8 +33,25 @@ class BTagSelection(Module):
         self.jetMinPt = jetMinPt
         self.jetMaxEta = jetMaxEta
         self.storeKinematics = storeKinematics
-        self.taggerFct = taggerFct
+        self.workingpoint = workingpoint
         
+        #TODO: need UL WPs for 2016; not available yet
+        wpValues = {
+            '2016': [ 0.0614, 0.3093, 0.7221 ], #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL16postVFP#AK4_b_tagging
+            '2016preVFP': [0.0480, 0.2489, 0.6377], #https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation2016Legacy
+            '2017': [0.0532, 0.3040, 0.7476], #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL17
+            '2018': [0.0490, 0.2783, 0.7100] #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL18
+        }
+        
+        if workingpoint==BTagSelection.TIGHT:
+            self.taggerFct = lambda jet: jet.btagDeepFlavB>wpValues[Module.globalOptions['year']][2]
+        elif workingpoint==BTagSelection.MEDIUM:
+            self.taggerFct = lambda jet: jet.btagDeepFlavB>wpValues[Module.globalOptions['year']][1]
+        elif workingpoint==BTagSelection.LOOSE:
+            self.taggerFct = lambda jet: jet.btagDeepFlavB>wpValues[Module.globalOptions['year']][0]
+        else:
+            raise Exception("Btagging workingpoint not defined")
+            
     def beginJob(self):
         pass
 
