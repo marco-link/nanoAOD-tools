@@ -26,7 +26,7 @@ parser.add_argument('--notagger', dest='notagger',
                     action='store_true', default=False)
 parser.add_argument('--year', dest='year',
                     action='store', type=str, default='2016', choices=['2016','2016preVFP','2017','2018'])
-parser.add_argument('--nleptons', dest='nleptons',
+parser.add_argument('--nleptons', dest='nleptons', type=int,
                     default=1, choices=[1,2])
 parser.add_argument('--input', dest='inputFiles', action='append', default=[])
 parser.add_argument('output', nargs=1)

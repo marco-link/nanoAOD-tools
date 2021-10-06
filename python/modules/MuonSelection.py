@@ -43,8 +43,10 @@ class MuonSelection(Module):
             raise Exception("Unsupported ID or ISO")
 
         self.triggerObjectCollection = lambda event: Collection(event, "TrigObj") if triggerMatch else lambda event: []
+        ''' 
+        if Module.globalOptions["year"] == '2016preVFP':
                 
-        if Module.globalOptions["year"] == '2016':
+        elif Module.globalOptions["year"] == '2016':
             #tight id efficiency
             idTightSFBToF = getHist(
                 "PhysicsTools/NanoAODTools/data/muon/2016/RunBCDEF_SF_ID.root",
@@ -165,41 +167,46 @@ class MuonSelection(Module):
         else:
             raise Exception("Error - invalid year for muon efficiencies")
 
+        '''
         if muonID==MuonSelection.TIGHT:
             self.muonIdFct = lambda muon: muon.tightId==1
-            self.muonIdSF = self.idTightSFHist
+            #self.muonIdSF = self.idTightSFHist
         elif muonID==MuonSelection.LOOSE:
             self.muonIdFct = lambda muon: muon.looseId==1
-            self.muonIdSF = self.idLooseSFHist
+            #self.muonIdSF = self.idLooseSFHist
         elif muonID==MuonSelection.NONE:
             self.muonIdFct = lambda muon: True
-            self.muonIdSF = self.idLooseSFHist
+            #self.muonIdSF = self.idLooseSFHist
             
             
         if muonIso==MuonSelection.VERYTIGHT:
             self.muonIsoFct = lambda muon: muon.pfRelIso04_all<0.06
+            '''
             if muonID==MuonSelection.TIGHT:
                 #TODO: need to use very tight SFs
                 self.muonIsoSF = self.isoTightTightSFHist
             else:
                 raise Exception("Error - unsupported muon ID/iso combination")
-            
+            '''
         elif muonIso==MuonSelection.TIGHT:
             self.muonIsoFct = lambda muon: muon.pfRelIso04_all<0.15
+            '''
             if muonID==MuonSelection.TIGHT:
                 self.muonIsoSF = self.isoTightTightSFHist
             else:
                 raise Exception("Error - unsupported muon ID/iso combination")
-
+            '''
         elif muonIso==MuonSelection.LOOSE:
             self.muonIsoFct = lambda muon: muon.pfRelIso04_all<0.25
+            '''
             if muonID==MuonSelection.LOOSE:
                 self.muonIsoSF = self.isoLooseLooseSFHist
             else:
                 raise Exception("Error - unsupported muon ID/iso combination")
-
+            '''
         elif muonIso==MuonSelection.NONE:
             self.muonIsoFct = lambda muon: True
+            '''
             if muonID==MuonSelection.TIGHT:
                 self.muonIsoSF = self.isoLooseTightSFHist
             elif muonID==MuonSelection.LOOSE:
@@ -208,10 +215,11 @@ class MuonSelection(Module):
                 self.muonIsoSF = self.isoLooseLooseSFHist
             else:
                 raise Exception("Error - unsupported muon ID/iso combination")
-                
+            '''
         elif muonIso==MuonSelection.INV:
             self.muonIsoFct = lambda muon: muon.pfRelIso04_all>0.25 and muon.pfRelIso04_all<0.8
             self.storeWeights = False
+        
 
     def triggerMatched(self, muon, trigger_object):
         if self.triggerMatch:
