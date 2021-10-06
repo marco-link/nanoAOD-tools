@@ -47,6 +47,7 @@ class XGBEvaluation(Module):
     def analyze(self, event):
 
         #TODO: XGB does not notice if wrong number of inputs is given
+        #TODO: need to deal with uncertainties!!!
 
         featureArr = np.zeros((len(self.systematics),len(self.features)))
         for i, syst in enumerate(self.systematics):

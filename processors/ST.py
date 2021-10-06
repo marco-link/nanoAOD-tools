@@ -58,7 +58,7 @@ minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
 met_variable = {
     '2016': lambda event: Object(event, "MET"),
     '2016preVFP': lambda event: Object(event, "MET"),
-    '2017': lambda event: Object(event, "METFixEE2017"), #TODO: check if this is still needed for UL
+    '2017': lambda event: Object(event, "MET"), #"METFixEE2017"), #TODO: check if this is still needed for UL
     '2018': lambda event: Object(event, "MET")
 }
 
@@ -202,8 +202,32 @@ def jetSelection(jetDict):
     return seq
     
     
-def eventReconstruction1l():
+def eventReconstruction(uncertaintyDict):
     seq = []
+    for systName,(ljetCollection,bjetCollection,metObject) in uncertaintyDict.items():
+        if args.nleptons==1:
+            #TODO: outputs are named wrong
+            WbosonReconstruction(
+                leptonObject = lambda event: event.tightLeptons[0],
+                metObject = metObject,
+                outputName=systName,
+            ),
+            TopReconstruction(
+                bJetCollection=bjetCollection,
+                lJetCollection=ljetCollection,
+                leptonObject=lambda event: event.tightLeptons[0],
+                wbosonCollection=lambda event,sys=systName: getattr(event,systName+"_w_candidates"),
+                metObject = metObject,
+                outputName=systName,
+            ),
+            #TODO: does not yet work with uncertainties
+            #XGBEvaluation(
+            #    modelPath="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/testBDT_bdt.bin",
+            #    inputFeatures="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/bdt_inputs.py",
+            #)
+        else:
+            pass
+    
     return seq
 
 
@@ -216,82 +240,70 @@ analyzerChain = [
 ]
 analyzerChain.extend(leptonSequence())
 
-jesUncertaintyNames = ["Total","Absolute","EC2","BBEC1", "HF","RelativeBal","FlavorQCD" ]
-for jesUncertaintyExtra in ["RelativeSample","HF","Absolute","EC2","BBEC1"]:
-    jesUncertaintyNames.append(jesUncertaintyExtra+"_"+args.year.replace("preVFP",""))
-print "JECs: ",jesUncertaintyNames
-
-analyzerChain.append(
-    JetMetUncertainties(
-        jesUncertaintyFilesRegrouped[args.year],
-        jerResolutionFiles[args.year],
-        jerSFUncertaintyFiles[args.year],
-        jesUncertaintyNames = jesUncertaintyNames, 
-        metInput = lambda event: Object(event, "MET"),
-        rhoInput = lambda event: event.fixedGridRhoFastjetAll,
-        jetCollection = lambda event: Collection(event,"Jet"),
-        lowPtJetCollection = lambda event: Collection(event,"CorrT1METJet"),
-        genJetCollection = lambda event: Collection(event,"GenJet"),
-        muonCollection = lambda event: Collection(event,"Muon"),
-        electronCollection = lambda event: Collection(event,"Electron"),
-        propagateJER = False,
-        outputJetPrefix = 'jets_',
-        outputMetPrefix = 'met_',
-        jetKeys=['jetId', 'nConstituents','btagDeepFlavB'],
-        metKeys = [],
+if args.isData:
+    analyzerChain.extend(
+        jetSelection({
+            "nominal": lambda event: Collection(event,"Jet")
+        })
     )
-)
-
-jetDict = {
-    "nominal": lambda event: event.jets_nominal,
-    "jerUp": lambda event: event.jets_jerUp,
-    "jerDown": lambda event: event.jets_jerDown,
-}
-for jesUncertaintyName in jesUncertaintyNames:
-    jetDict['jes'+jesUncertaintyName+"Up"] = lambda event,sys=jesUncertaintyName: getattr(event,"jets_jes"+sys+"Up")
-    jetDict['jes'+jesUncertaintyName+"Down"] = lambda event,sys=jesUncertaintyName: getattr(event,"jets_jes"+sys+"Down")
-
-analyzerChain.extend(
-    jetSelection(jetDict)
-)
-
-
-'''
-    ChargeTagging(
-        modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
-        featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
-        inputCollections = [lambda event: event.nominal_selectedBJets],
-        taggerName = "tagger",
-    ),
-    SimpleJetChargeSum(
-        inputCollection=lambda event: event.nominal_selectedBJets,
-        outputCollection="selectedBJets",
-        outputName="betaChargeSum",
-        beta=0.8,
-        globalOptions=globalOptions
-    ),
-    WbosonReconstruction(
-        leptonObject = lambda event: event.tightMuons[0],
-        metObject =lambda event: Object(event, "MET"),
-        outputName="nominal",
-    ),
-    TopReconstruction(
-        bJetCollection=lambda event: event.nominal_selectedBJets,
-        lJetCollection=lambda event: event.nominal_selectedLJets,
-        leptonObject=lambda event: event.tightMuons[0],
-        wbosonCollection=lambda event: event.nominal_w_candidates,
-        metObject = lambda event: Object(event, "MET"),
-        outputName="nominal",
-        globalOptions=globalOptions
-    ),
-    XGBEvaluation(
-        modelPath="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/testBDT_bdt.bin",
-        inputFeatures="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/bdt_inputs.py",
+    analyzerChain.extend(
+        eventReconstruction({
+            "nominal": (lambda event: Collection(event,"Jet"),met_variable[args.year])
+        })
     )
+
+else:
+    jesUncertaintyNames = ["Total","Absolute","EC2","BBEC1", "HF","RelativeBal","FlavorQCD" ]
+    for jesUncertaintyExtra in ["RelativeSample","HF","Absolute","EC2","BBEC1"]:
+        jesUncertaintyNames.append(jesUncertaintyExtra+"_"+args.year.replace("preVFP",""))
+    print "JECs: ",jesUncertaintyNames
+
+    analyzerChain.append(
+        JetMetUncertainties(
+            jesUncertaintyFilesRegrouped[args.year],
+            jerResolutionFiles[args.year],
+            jerSFUncertaintyFiles[args.year],
+            jesUncertaintyNames = jesUncertaintyNames, 
+            metInput = met_variable[args.year],
+            rhoInput = lambda event: event.fixedGridRhoFastjetAll,
+            jetCollection = lambda event: Collection(event,"Jet"),
+            lowPtJetCollection = lambda event: Collection(event,"CorrT1METJet"),
+            genJetCollection = lambda event: Collection(event,"GenJet"),
+            muonCollection = lambda event: Collection(event,"Muon"),
+            electronCollection = lambda event: Collection(event,"Electron"),
+            propagateJER = False,
+            outputJetPrefix = 'jets_',
+            outputMetPrefix = 'met_',
+            jetKeys=['jetId', 'nConstituents','btagDeepFlavB'],
+            metKeys = [],
+        )
+    )
+
+    jetDict = {
+        "nominal": lambda event: event.jets_nominal,
+        "jerUp": lambda event: event.jets_jerUp,
+        "jerDown": lambda event: event.jets_jerDown,
+    }
+    for jesUncertaintyName in jesUncertaintyNames:
+        jetDict['jes'+jesUncertaintyName+"Up"] = lambda event,sys=jesUncertaintyName: getattr(event,"jets_jes"+sys+"Up")
+        jetDict['jes'+jesUncertaintyName+"Down"] = lambda event,sys=jesUncertaintyName: getattr(event,"jets_jes"+sys+"Down")
+
+    analyzerChain.extend(
+        jetSelection(jetDict)
+    )
+
+    uncertaintyDict = {
+        "nominal": (lambda event: event.selectedLJets_nominal,lambda event: event.selectedBJets_nominal,lambda event: event.met_nominal),
+        "jerUp": (lambda event: event.selectedLJets_jerUp,lambda event: event.selectedBJets_jerUp,lambda event: event.met_jerUp),
+        "jerDown": (lambda event: event.selectedLJets_jerDown,lambda event: event.selectedBJets_jerDown,lambda event: event.met_jerDown),
+    }
+    #TODO: add all uncs
+    analyzerChain.extend(
+        eventReconstruction(uncertaintyDict)
+    )
+
     
-    
-]
-'''
+
 
 if args.isSignal:
     analyzerChain.append(
