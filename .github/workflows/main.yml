@@ -1,10 +1,10 @@
-name: Docker Image CI
+name: ST workflow
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches: [ wbwbxUL ]
   pull_request:
-    branches: [ $default-branch ]
+    branches: [ wbwbxUL ]
     
 jobs:
   build:
