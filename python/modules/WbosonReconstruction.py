@@ -16,13 +16,11 @@ class WbosonReconstruction(Module):
 
         leptonObject = lambda event: Collection(event,"Muon")[0],
         metObject =lambda event: Object(event, "MET"),
-        globalOptions={"isData":False}, 
         outputName='nominal',
         debug = False
     ):
         self.leptonObject = leptonObject
         self.metObject = metObject
-        self.globalOptions=globalOptions
         self.outputName=outputName
         self.debug = debug
 

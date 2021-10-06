@@ -16,9 +16,7 @@ class SingleElectronTriggerSelection(Module):
         inputCollection = lambda event: getattr(event,"tightElectron"),
         storeWeights=False,
         outputName = "IsoElectronTrigger",
-        globalOptions={"isData":False, "year":2016}
     ):
-        self.globalOptions = globalOptions
         self.inputCollection = inputCollection
         self.outputName = outputName
         self.storeWeights = storeWeights
@@ -72,7 +70,7 @@ class SingleElectronTriggerSelection(Module):
         
         self.out.branch(self.outputName+"_flag","I")
         
-        if not self.globalOptions["isData"] and self.storeWeights:
+        if not Module.globalOptions["isData"] and self.storeWeights:
             self.out.branch(self.outputName+"_weight_trigger_nominal","F")
             self.out.branch(self.outputName+"_weight_trigger_up","F")
             self.out.branch(self.outputName+"_weight_trigger_down","F")
@@ -99,18 +97,18 @@ class SingleElectronTriggerSelection(Module):
 
         trigger_flag = 0
 
-        if self.globalOptions["year"] == 2016:
+        if Module.globalOptions["year"] == '2016' or Module.globalOptions["year"] == '2016preVFP':
             trigger_flag = event.HLT_Ele27_WPTight_Gsf
 
-        elif self.globalOptions["year"] == 2017:
+        elif Module.globalOptions["year"] == '2017':
             trigger_flag = event.HLT_Ele32_WPTight_Gsf_L1DoubleEG
 
-        elif self.globalOptions["year"] == 2018:
+        elif Module.globalOptions["year"] == '2018':
             trigger_flag = event.HLT_Ele32_WPTight_Gsf
 
         self.out.fillBranch(self.outputName+"_flag", trigger_flag)
             
-        if not self.globalOptions["isData"] and self.storeWeights:
+        if not Module.globalOptions["isData"] and self.storeWeights:
             self.out.fillBranch(self.outputName+"_weight_trigger_nominal",weight_trigger_nominal)
             self.out.fillBranch(self.outputName+"_weight_trigger_up",weight_trigger_up)
             self.out.fillBranch(self.outputName+"_weight_trigger_down",weight_trigger_down)

@@ -1,15 +1,19 @@
 # nanoAOD-tools for WbWbX analysis
 
+[![ST workflow](https://github.com/WbWbX/nanoAOD-tools/actions/workflows/main.yml/badge.svg)](https://github.com/WbWbX/nanoAOD-tools/actions/workflows/main.yml)
+
+Tests are defined in [test/runCMSSWTest.sh](https://github.com/WbWbX/nanoAOD-tools/blob/wbwbxUL/test/runCMSSWTest.sh)
+
 ## Checkout instructions: CMSSW_11_1_7
 
 ```
-    export SCRAM_ARCH=slc7_amd64_gcc820
-    cmsrel CMSSW_11_1_7
-    cd CMSSW_11_1_7/src
-    git clone -b wbwbxUL git@github.com:<yourname>/nanoAOD-tools.git PhysicsTools/NanoAODTools
-    cd PhysicsTools/NanoAODTools
-    cmsenv
-    scram b
+export SCRAM_ARCH=slc7_amd64_gcc820
+cmsrel CMSSW_11_1_7
+cd CMSSW_11_1_7/src
+git clone -b wbwbxUL git@github.com:<yourname>/nanoAOD-tools.git PhysicsTools/NanoAODTools
+cd PhysicsTools/NanoAODTools
+cmsenv
+scram b
 ```
 
 Note that only `CMSSW_11_X` or higher includes TensorFlow v2.1 which is used for training the b charge tagger. To check which TF version comes with CMSSW use ```scram tool list | grep tensorflow```.
@@ -21,12 +25,14 @@ The general post-processing script for producing final ntuples for plotting and 
 
 ```
 python PhysicsTools/NanoAODTools/processors/ST.py \
-    -i <root input file> --year <year> [--isSignal] [--isData] \
+    -i <root input file> \
+    --year <year>  \
+    [--isSignal] [--isData] [--nleptons <N>] [--nosys] [--notagger] \
     <output file name>
 ```
 
 The script accepts the following arguments:
-* the input root file is an extended nanoAOD format which includes additional information to evaluate the charge tagger on-the-fly. It is created using the [ChargeReco](https://github.com/WbWbX/ChargeReco) package.
+* `-i` the input root file is an extended nanoAOD format which includes additional information to evaluate the charge tagger on-the-fly. It is created using the [ChargeReco](https://github.com/WbWbX/ChargeReco) package.
 * `--year` needs to be one of the following: '2016','2016preVFP','2017','2018' (default: '2016')
 * `--nleptons` flag to switch between signal (=1) and top quark pair control region (=2) (default: 1)
 * `--isSignal` optional flag to store additional information for the signal (e.g. parton/particle level observables, LHE weights) (default: false)

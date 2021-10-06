@@ -180,7 +180,6 @@ class JetMetUncertainties(Module):
         outputMetPrefix = 'met_',
         jetKeys=['jetId', 'nConstituents'],
         metKeys = [],
-        globalOptions={"isData": False}
     ):
 
         self.jesUncertaintyNames = jesUncertaintyNames 
@@ -196,9 +195,8 @@ class JetMetUncertainties(Module):
         self.outputMetPrefix = outputMetPrefix
         self.jetKeys = jetKeys
         self.metKeys = metKeys
-        self.globalOptions = globalOptions
         
-        if self.globalOptions['isData']:
+        if Module.globalOptions['isData']:
             raise Exception("Error - JetMetUncertainty module should never be run on data")
 
         self.jerUncertaintyCalculator = JERUncertaintyCalculator(

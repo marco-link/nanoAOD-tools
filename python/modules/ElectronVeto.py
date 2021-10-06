@@ -16,9 +16,7 @@ class ElectronVeto(Module):
         outputName = "vetoElectrons",
         electronMinPt = 10.,
         electronMaxEta = 2.4,
-        globalOptions={"isData":False}
     ):
-        self.globalOptions = globalOptions
         self.inputCollection = inputCollection
         self.outputName = outputName
         self.electronMinPt = electronMinPt

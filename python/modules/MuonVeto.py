@@ -16,9 +16,7 @@ class MuonVeto(Module):
         outputName = "vetoMuons",
         muonMinPt = 10.,
         muonMaxEta = 2.4,
-        globalOptions={"isData":False}
     ):
-        self.globalOptions = globalOptions
         self.inputCollection = inputCollection
         self.outputName = outputName
         self.muonMinPt = muonMinPt
