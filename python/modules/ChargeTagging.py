@@ -46,12 +46,6 @@ class ChargeTagging(Module):
         self.out = wrappedOutputTree
         self.setup(inputTree)
 
-        self.out.branch('n'+self.taggerName,"I")
-        self.out.branch(self.taggerName+"_Bm","F",lenVar="n"+self.taggerName)
-        self.out.branch(self.taggerName+"_B0bar","F",lenVar="n"+self.taggerName)
-        self.out.branch(self.taggerName+"_B0","F",lenVar="n"+self.taggerName)
-        self.out.branch(self.taggerName+"_Bp","F",lenVar="n"+self.taggerName)
-
     def setupTFEval(self,tree,modelFile):
         print "Building TFEval object"
         tfEval = ROOT.TFEval()
@@ -135,25 +129,14 @@ class ChargeTagging(Module):
             #apply softmax on logit output
             predictionsPerIndex[jetIndex] = np.exp(x)/sum(np.exp(x))
 
-        #NOTE: take just first collection for quick study
-        jets = self.inputCollections[0](event)
-        probBm = [0.]*len(jets)
-        probB0bar = [0.]*len(jets)
-        probB0 = [0.]*len(jets)
-        probBp = [0.]*len(jets)
-        
-        for ijet, jet in enumerate(jets):
-            if hasattr(jet, "globalIdx"):     
-                probBm[ijet] = predictionsPerIndex[jet.globalIdx][0]
-                probB0bar[ijet] = predictionsPerIndex[jet.globalIdx][1]
-                probB0[ijet] = predictionsPerIndex[jet.globalIdx][2]
-                probBp[ijet] = predictionsPerIndex[jet.globalIdx][3]
-        
-        self.out.fillBranch('n'+self.taggerName,len(jets))
-        self.out.fillBranch(self.taggerName+"_Bm",probBm)
-        self.out.fillBranch(self.taggerName+"_B0bar",probB0bar)
-        self.out.fillBranch(self.taggerName+"_B0",probB0)
-        self.out.fillBranch(self.taggerName+"_Bp",probBp)
-        
-        
+        for jetCollection in self.inputCollections:
+            jets = jetCollection(event)
+            for ijet, jet in enumerate(jets):
+                if hasattr(jet, "globalIdx"):
+                    for ilabel,labelName in enumerate(self.predictionLabels):
+                        setattr(jet,self.taggerName+"_"+labelName,predictionsPerIndex[jet.globalIdx][ilabel])
+                else:
+                    for ilabel,labelName in enumerate(self.predictionLabels):
+                        setattr(jet,self.taggerName+"_"+labelName,-1.)
+
         return True
