@@ -65,13 +65,20 @@ class WbosonReconstruction(Module):
         leptonP4 = lepton.p4()
         
         wbosons = []
+
+        #nuSol = self.recoMetFromWmass(leptonP4,metP4)
         
-        for nuP4 in self.recoMetFromWmass(leptonP4,metP4):
+        nuSol = ROOT.NeutrinoReco.NuMomentum(
+            leptonP4.Px(), leptonP4.Py(), leptonP4.Pz(),
+            leptonP4.P(), metP4.Px(), metP4.Py()
+        )   
+        
+        for nuP4 in nuSol:
             wP4 = nuP4+leptonP4
             wbosons.append(PhysicsObject(None, pt=wP4.Pt(), eta=wP4.Eta(), phi=wP4.Phi(), mass= wP4.M()))
             
         if len(wbosons)==0:
-            print "ERROR - no wbosons"
+            raise Exception("ERROR - no wbosons")
             
         setattr(event,self.outputName+"_w_candidates",wbosons)
             

@@ -11,6 +11,7 @@ import imp
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
+from utils import deltaPhi
 
 class ChargeTagging(Module):
 
@@ -108,13 +109,13 @@ class ChargeTagging(Module):
                 try:
                     global_jet_index = jetglobal_indices.index(jet._index)
                 except ValueError:
-                    print "WARNING: jet (pt: %s, eta: %s) does not have a matching global jet --> tagger cannot be evaluated!" % (jet.pt, jet.eta)
+                    print "ChargeTagging: WARNING: jet (pt: %s, eta: %s) does not have a matching global jet --> tagger cannot be evaluated!" % (jet.pt, jet.eta)
                     continue
                 else:
                     global_jet = jetglobal[global_jet_index]
-                    if abs(jet.eta - global_jet.eta) > 0.01 or \
-                       abs(jet.phi - global_jet.phi) > 0.01:
-                           print "Warning ->> jet might be mismatched!"
+                    if math.fabs(jet.eta - global_jet.eta) > 0.01 or \
+                       math.fabs(deltaPhi(jet.phi,global_jet.phi)) > 0.01:
+                           print "ChargeTagging: Warning ->> jet might be mismatched!"
                     jetOriginIndices.add(global_jet_index)
                     setattr(jet, "globalIdx", global_jet_index)
 

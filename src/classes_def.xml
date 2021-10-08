@@ -6,12 +6,14 @@
   <class name="WeightCalculatorFromHistogram"/>
   <class name="ReduceMantissaToNbitsRounding"/>
   
-  <class name="EventShapes"/>
-  
   <class name="TFEval"/>
   <class name="TFEval::ArrayFeatureGroup"/>
   <class name="TFEval::ValueFeatureGroup"/>
   <class name="TFEval::Result"/>
   <class name="TFEval::BranchAccessor"/>
+
+  <class name="EventShapes"/>
+
+  <class name="NeutrinoReco"/>
 </selection>
 </lcgdict>

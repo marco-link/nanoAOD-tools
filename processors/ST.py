@@ -26,9 +26,9 @@ parser.add_argument('--notagger', dest='notagger',
                     action='store_true', default=False)
 parser.add_argument('--year', dest='year',
                     action='store', type=str, default='2016', choices=['2016','2016preVFP','2017','2018'])
-parser.add_argument('--nleptons', dest='nleptons', type=int,
-                    default=1, choices=[1,2])
-parser.add_argument('--input', dest='inputFiles', action='append', default=[])
+parser.add_argument('--ntags', dest='ntags', type=int,
+                    default=1, choices=[-1,0,1,2])
+parser.add_argument('-i','--input', dest='inputFiles', action='append', default=[])
 parser.add_argument('output', nargs=1)
 
 args = parser.parse_args()
@@ -129,7 +129,7 @@ def leptonSequence():
             electronMaxEta = 2.4,
         ),
         EventSkim(selection=lambda event: (event.IsoMuTrigger_flag > 0) or (event.IsoElectronTrigger_flag > 0)),
-        EventSkim(selection=lambda event: (len(event.tightMuons) + len(event.tightElectrons)) == args.nleptons),
+        EventSkim(selection=lambda event: (len(event.tightMuons) + len(event.tightElectrons)) == 1),
         EventSkim(selection=lambda event: (len(event.looseMuons) + len(event.looseElectrons)) == 0),
         
         CombineLeptons(
@@ -137,9 +137,6 @@ def leptonSequence():
             electronCollection = lambda event: event.tightElectrons,
             outputName = "tightLeptons"
         ),
-        
-        
-        
     ]
     return seq
     
@@ -178,6 +175,12 @@ def jetSelection(jetDict):
             any([getattr(event, "nselectedJets_"+systName) > 2 for systName in systNames])
         )
     )
+    if args.ntags>=0:
+        seq.append(
+            EventSkim(selection=lambda event, systNames=systNames: 
+                any([getattr(event, "selectedBJets_"+systName) == args.ntags for systName in systNames])
+            )
+        )
     
     seq.append(
         ChargeTagging(
@@ -205,28 +208,27 @@ def jetSelection(jetDict):
 def eventReconstruction(uncertaintyDict):
     seq = []
     for systName,(ljetCollection,bjetCollection,metObject) in uncertaintyDict.items():
-        if args.nleptons==1:
-            #TODO: outputs are named wrong
-            WbosonReconstruction(
-                leptonObject = lambda event: event.tightLeptons[0],
-                metObject = metObject,
-                outputName=systName,
-            ),
-            TopReconstruction(
-                bJetCollection=bjetCollection,
-                lJetCollection=ljetCollection,
-                leptonObject=lambda event: event.tightLeptons[0],
-                wbosonCollection=lambda event,sys=systName: getattr(event,systName+"_w_candidates"),
-                metObject = metObject,
-                outputName=systName,
-            ),
-            #TODO: does not yet work with uncertainties
-            #XGBEvaluation(
-            #    modelPath="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/testBDT_bdt.bin",
-            #    inputFeatures="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/bdt_inputs.py",
-            #)
-        else:
-            pass
+        #TODO: outputs are named wrong
+        seq.append(WbosonReconstruction(
+            leptonObject = lambda event: event.tightLeptons[0],
+            metObject = metObject,
+            outputName=systName,
+        ))
+
+        seq.append(TopReconstruction(
+            bJetCollection=bjetCollection,
+            lJetCollection=ljetCollection,
+            leptonObject=lambda event: event.tightLeptons[0],
+            wbosonCollection=lambda event,sys=systName: getattr(event,systName+"_w_candidates"),
+            metObject = metObject,
+            outputName=systName,
+        ))
+        #TODO: does not yet work with uncertainties
+        #XGBEvaluation(
+        #    modelPath="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/testBDT_bdt.bin",
+        #    inputFeatures="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/bdt_inputs.py",
+        #)
+
     
     return seq
 
@@ -294,8 +296,8 @@ else:
 
     uncertaintyDict = {
         "nominal": (lambda event: event.selectedLJets_nominal,lambda event: event.selectedBJets_nominal,lambda event: event.met_nominal),
-        "jerUp": (lambda event: event.selectedLJets_jerUp,lambda event: event.selectedBJets_jerUp,lambda event: event.met_jerUp),
-        "jerDown": (lambda event: event.selectedLJets_jerDown,lambda event: event.selectedBJets_jerDown,lambda event: event.met_jerDown),
+        #"jerUp": (lambda event: event.selectedLJets_jerUp,lambda event: event.selectedBJets_jerUp,lambda event: event.met_jerUp),
+        #"jerDown": (lambda event: event.selectedLJets_jerDown,lambda event: event.selectedBJets_jerDown,lambda event: event.met_jerDown),
     }
     #TODO: add all uncs
     analyzerChain.extend(
