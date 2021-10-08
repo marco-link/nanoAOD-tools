@@ -35,6 +35,7 @@ args = parser.parse_args()
 
 print "isData:",args.isData
 print "isSignal:",args.isSignal
+print "ntags:",args.ntags
 print "evaluate systematics:",not args.nosys
 print "evaluate tagger:",not args.notagger
 print "inputs:",len(args.inputFiles)
