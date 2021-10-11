@@ -18,15 +18,15 @@ class BTagSelection(Module):
     TIGHT=2
     
     def __init__(
-         self,
-         inputCollection=lambda event: Collection(event, "Jet"),
-         outputBName="selectedBJets",
-         outputLName="selectedLJets",
-         jetMinPt=30.,
-         jetMaxEta=2.4,
-         workingpoint = TIGHT,
-         storeKinematics=['pt', 'eta'],
-     ):
+        self,
+        inputCollection=lambda event: Collection(event, "Jet"),
+        outputBName="selectedBJets",
+        outputLName="selectedLJets",
+        jetMinPt=30.,
+        jetMaxEta=2.4,
+        workingpoint = TIGHT,
+        storeKinematics=['pt', 'eta'],
+    ):
         self.inputCollection = inputCollection
         self.outputBName = outputBName
         self.outputLName = outputLName
@@ -35,10 +35,10 @@ class BTagSelection(Module):
         self.storeKinematics = storeKinematics
         self.workingpoint = workingpoint
         
-        #TODO: need UL WPs for 2016; not available yet
+        #DONE - but also available in files
         wpValues = {
-            '2016': [ 0.0614, 0.3093, 0.7221 ], #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL16postVFP#AK4_b_tagging
-            '2016preVFP': [0.0480, 0.2489, 0.6377], #https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation2016Legacy
+            '2016preVPF': [0.0614, 0.3093, 0.7221], #https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation2016Legacy
+            '2016': [0.0480, 0.2489, 0.6377], #https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation106XUL16postVFP
             '2017': [0.0532, 0.3040, 0.7476], #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL17
             '2018': [0.0490, 0.2783, 0.7100] #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL18
         }
