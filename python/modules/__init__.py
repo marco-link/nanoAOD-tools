@@ -28,6 +28,7 @@ from ChargeTagging import ChargeTagging
 from SimpleJetChargeSum import SimpleJetChargeSum
 from BTagSelection import BTagSelection
 from JetGenInfo import JetGenInfo
+from btagSFProducer import btagSFProducer
 
 #event hypothesis
 from WbosonReconstruction import WbosonReconstruction
