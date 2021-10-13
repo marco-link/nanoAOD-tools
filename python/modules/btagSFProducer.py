@@ -48,7 +48,7 @@ class btagSFProducer(Module):
 
     def __init__(
             self, era, algo='DeepJet', selectedWPs=['shape_corr'],
-            sfFileName=None, verbose=0, jesSystsForShape=["jes"]
+            sfFileName=None, verbose=1, jesSystsForShape=["jes"]
     ):
         self.era = era
         self.algo = algo.lower()
