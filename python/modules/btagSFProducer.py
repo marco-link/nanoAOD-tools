@@ -283,7 +283,7 @@ class btagSFProducer(Module):
                     preloaded_jets = [(jet.pt, jet.eta, self.getFlavorBTV(jet.hadronFlavour), getattr(jet, discr)) 
                                       for jet in getattr(event,"selectedJets_"+self.getSystForFwk(central_or_syst))]
                 else:
-                    preloaded_jets = [(jet.pt, jet.eta, self.getFlavorBTV(jeyt.hadronFlavour), getattr(jet, discr))
+                    preloaded_jets = [(jet.pt, jet.eta, self.getFlavorBTV(jet.hadronFlavour), getattr(jet, discr))
                                       for jet in getattr(event,"selectedJets_nominal")]
 
                 scale_factors = list(self.getSFs(
