@@ -36,7 +36,7 @@ class btagSFProducer(Module):
 
     def __init__(
             self, era, algo='DeepJet', selectedWPs=['shape_corr'],
-            sfFileName=None, verbose=1, jesSystsForShape=["jes"]
+            sfFileName=None, verbose=0, jesSystsForShape=["jes"]
     ):
         self.era = era
         self.algo = algo.lower()
@@ -281,10 +281,10 @@ class btagSFProducer(Module):
             for central_or_syst in central_and_systs:
                 if self.isJESvariation(central_or_syst):
                     preloaded_jets = [(jet.pt, jet.eta, self.getFlavorBTV(jet.hadronFlavour), getattr(jet, discr)) 
-                                      for jet in chain(getattr(event,"selectedBJets_"+self.getSystForFwk(central_or_syst)),getattr(event,"selectedLJets_"+self.getSystForFwk(central_or_syst)))]
+                                      for jet in getattr(event,"selectedJets_"+self.getSystForFwk(central_or_syst))]
                 else:
-                    preloaded_jets = [(jet.pt, jet.eta, self.getFlavorBTV(jet.hadronFlavour), getattr(jet, discr))
-                                      for jet in chain(getattr(event,"selectedBJets_nominal"),getattr(event,"selectedLJets_nominal"))]
+                    preloaded_jets = [(jet.pt, jet.eta, self.getFlavorBTV(jeyt.hadronFlavour), getattr(jet, discr))
+                                      for jet in getattr(event,"selectedJets_nominal")]
 
                 scale_factors = list(self.getSFs(
                     preloaded_jets, central_or_syst, reader, 'auto', isShape))
