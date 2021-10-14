@@ -29,18 +29,6 @@ def is_relevant_syst_for_shape_corr(flavor_btv, syst, jesSystsForShape=["jes"]):
         raise ValueError("ERROR: Undefined flavor = %i!!" % flavor_btv)
     return True
 
-def getSystForFwk(syst):
-    if syst == 'central':
-        return 'nominal'
-    if syst.startswith('up_jes'):
-        syst = syst.replace('up_jes','jes') + 'Up'
-    elif syst.startswith('down_jes'):
-        syst = syst.replace('down_jes','jes') + 'Down'
-    if syst == 'jesUp': syst = 'jesTotalUp'
-    elif syst == 'jesDown': syst = 'jesTotalDown'
-
-    return syst
-
 
 class btagSFProducer(Module):
     """Calculate btagging scale factors
@@ -160,7 +148,7 @@ class btagSFProducer(Module):
                 central_and_systs = self.central_and_systs
                 baseBranchName = 'Jet_btagSF_{}_{}'.format(self.algo, wp)
             for central_or_syst in central_and_systs:
-                branchNames[getSystForFwk(central_or_syst)] = baseBranchName + '_' + getSystForFwk(central_or_syst)
+                branchNames[self.getSystForFwk(central_or_syst)] = baseBranchName + '_' + self.getSystForFwk(central_or_syst)
             self.branchNames_central_and_systs[wp] = branchNames
 
     def beginJob(self):
@@ -293,7 +281,7 @@ class btagSFProducer(Module):
             for central_or_syst in central_and_systs:
                 if self.isJESvariation(central_or_syst):
                     preloaded_jets = [(jet.pt, jet.eta, self.getFlavorBTV(jet.hadronFlavour), getattr(jet, discr)) 
-                                      for jet in chain(getattr(event,"selectedBJets_"+getSystForFwk(central_or_syst)),getattr(event,"selectedLJets_"+getSystForFwk(central_or_syst)))]
+                                      for jet in chain(getattr(event,"selectedBJets_"+self.getSystForFwk(central_or_syst)),getattr(event,"selectedLJets_"+self.getSystForFwk(central_or_syst)))]
                 else:
                     preloaded_jets = [(jet.pt, jet.eta, self.getFlavorBTV(jet.hadronFlavour), getattr(jet, discr))
                                       for jet in chain(getattr(event,"selectedBJets_nominal"),getattr(event,"selectedLJets_nominal"))]
@@ -304,7 +292,7 @@ class btagSFProducer(Module):
                 for SF in scale_factors:
                     ev_weight *= SF
                 self.out.fillBranch(
-                    self.branchNames_central_and_systs[wp][getSystForFwk(central_or_syst)], ev_weight)
+                    self.branchNames_central_and_systs[wp][self.getSystForFwk(central_or_syst)], ev_weight)
         return True
 
     def isJESvariation(self,central_or_syst):
@@ -313,3 +301,15 @@ class btagSFProducer(Module):
                 return True
         return False
         
+    def getSystForFwk(self,syst):
+        if syst == 'central':
+            return 'nominal'
+        if 'fstats' in syst:
+            syst += '_' + Module.globalOptions['year']
+        if syst.startswith('up_'):
+            syst = syst.replace('up_','') + 'Up'
+        elif syst.startswith('down_'):
+            syst = syst.replace('down_','') + 'Down'
+        if syst == 'jesUp': syst = 'jesTotalUp'
+        elif syst == 'jesDown': syst = 'jesTotalDown'
+        return syst
