@@ -200,6 +200,10 @@ def jetSelection(jetDict):
             )
         )
 
+        seq.append(
+            PUWeightProducer_dict[args.year]()
+        )
+
     '''
     if isMC:
         seq.append(
