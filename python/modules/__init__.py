@@ -30,6 +30,9 @@ from BTagSelection import BTagSelection
 from JetGenInfo import JetGenInfo
 from btagSFProducer import btagSFProducer
 
+#event
+from PUWeightProducer import puWeightProducer, PUWeightProducer_dict
+
 #event hypothesis
 from WbosonReconstruction import WbosonReconstruction
 from TopReconstruction import TopReconstruction
