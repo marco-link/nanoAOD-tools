@@ -12,7 +12,7 @@ class puWeightProducer(Module):
                  targetfile,
                  myhist="pileup",
                  targethist="pileup",
-                 name="puWeight",
+                 outputName="puWeight",
                  norm=True,
                  verbose=False,
                  nvtx_var="Pileup_nTrueInt",
@@ -34,7 +34,7 @@ class puWeightProducer(Module):
             ROOT.gROOT.cd()
             self.myh = self.targeth.Clone("autoPU")
             self.myh.Reset()
-        self.name = name
+        self.outputName = outputName
         self.norm = norm
         self.verbose = verbose
         self.nvtxVar = nvtx_var
@@ -84,7 +84,7 @@ class puWeightProducer(Module):
             self.myh, self.targeth, self.norm, self.fixLargeWeights,
             self.verbose)
         self.out = wrappedOutputTree
-        self.out.branch(self.name, "F")
+        self.out.branch(self.outputName, "F")
         if self.doSysVar:
             self._worker_plus = ROOT.WeightCalculatorFromHistogram(
                 self.myh, self.targeth_plus, self.norm, self.fixLargeWeights,
@@ -92,8 +92,8 @@ class puWeightProducer(Module):
             self._worker_minus = ROOT.WeightCalculatorFromHistogram(
                 self.myh, self.targeth_minus, self.norm, self.fixLargeWeights,
                 self.verbose)
-            self.out.branch(self.name + "Up", "F")
-            self.out.branch(self.name + "Down", "F")
+            self.out.branch(self.outputName + "Up", "F")
+            self.out.branch(self.outputName + "Down", "F")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -111,10 +111,10 @@ class puWeightProducer(Module):
                     nvtx) if nvtx < self.myh.GetNbinsX() else 1
         else:
             weight = 1
-        self.out.fillBranch(self.name, weight)
+        self.out.fillBranch(self.outputName, weight)
         if self.doSysVar:
-            self.out.fillBranch(self.name + "Up", weight_plus)
-            self.out.fillBranch(self.name + "Down", weight_minus)
+            self.out.fillBranch(self.outputName + "Up", weight_plus)
+            self.out.fillBranch(self.outputName + "Down", weight_minus)
         return True
 
 
