@@ -180,14 +180,15 @@ def jetSelection(jetDict):
         )
     )
     
-    seq.append(
-        ChargeTagging(
-            modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
-            featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
-            inputCollections = btaggedJetCollections,
-            taggerName = "bChargeTag",
+    if not args.notagger:
+        seq.append(
+            ChargeTagging(
+                modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
+                featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
+                inputCollections = btaggedJetCollections,
+                taggerName = "bChargeTag",
+            )
         )
-    )
     
     if isMC:
         jesUncertForBtag = ['jes'+syst.replace('Total','') for syst in jesUncertaintyNames]
