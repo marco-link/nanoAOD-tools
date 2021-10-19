@@ -168,6 +168,7 @@ def jetSelection(jetDict):
                 jetMaxEta=2.4,
                 workingpoint = BTagSelection.TIGHT,
                 storeKinematics=[],
+                storeTruthKeys = ['hadronFlavour','partonFlavour'],
             )
         )
         btaggedJetCollections.append(lambda event, sys=systName: getattr(event,"selectedBJets_"+sys))
@@ -290,7 +291,7 @@ else:
             propagateJER = False,
             outputJetPrefix = 'jets_',
             outputMetPrefix = 'met_',
-            jetKeys=['jetId', 'nConstituents','btagDeepFlavB','hadronFlavour'],
+            jetKeys=['jetId', 'nConstituents','btagDeepFlavB','hadronFlavour','partonFlavour'],
             metKeys = [],
         )
     )
