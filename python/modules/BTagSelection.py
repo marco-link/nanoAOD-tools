@@ -26,13 +26,17 @@ class BTagSelection(Module):
         jetMaxEta=2.4,
         workingpoint = TIGHT,
         storeKinematics=['pt', 'eta'],
+        storeTruthKeys=[],
     ):
+        if Module.globalOptions['isData']:
+            storeTruthKeys=[]
         self.inputCollection = inputCollection
         self.outputBName = outputBName
         self.outputLName = outputLName
         self.jetMinPt = jetMinPt
         self.jetMaxEta = jetMaxEta
         self.storeKinematics = storeKinematics
+        self.storeTruthKeys = storeTruthKeys
         self.workingpoint = workingpoint
         
         #DONE - but also available in files
@@ -64,6 +68,8 @@ class BTagSelection(Module):
         self.out.branch("n"+self.outputBName, "I")
         for variable in self.storeKinematics:
             self.out.branch(self.outputBName+"_"+variable, "F", lenVar="n"+self.outputBName)
+        for variable in self.storeTruthKeys:
+            self.out.branch(self.outputBName+"_"+variable, "I", lenVar="n"+self.outputBName)
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -95,6 +101,9 @@ class BTagSelection(Module):
 
         self.out.fillBranch("n"+self.outputBName, len(selectedJets))
         for variable in self.storeKinematics:
+            self.out.fillBranch(self.outputBName+"_"+variable,
+                                map(lambda jet: getattr(jet, variable), selectedJets))
+        for variable in self.storeTruthKeys:
             self.out.fillBranch(self.outputBName+"_"+variable,
                                 map(lambda jet: getattr(jet, variable), selectedJets))
 
