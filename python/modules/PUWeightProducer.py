@@ -65,10 +65,13 @@ class puWeightProducer(Module):
         return hist
 
     def beginJob(self):
-        pass
+        self.weights = []
+
 
     def endJob(self):
-        pass
+        if abs(np.array(self.weights).mean()-1)/np.array(self.weights).std() > 5:
+            raise ValueError('average PU weight more than 5 standard deviations away from 1')
+
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         if self.autoPU:
@@ -115,6 +118,7 @@ class puWeightProducer(Module):
         if self.doSysVar:
             self.out.fillBranch(self.outputName + "Up", weight_plus)
             self.out.fillBranch(self.outputName + "Down", weight_minus)
+        self.weights.append(weight)
         return True
 
 
