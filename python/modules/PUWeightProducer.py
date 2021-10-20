@@ -69,7 +69,7 @@ class puWeightProducer(Module):
 
 
     def endJob(self):
-        if np.array(self.weights).std() > 0:
+        if len(self.weights) > 0 and np.array(self.weights).std() > 0:
             if abs(np.array(self.weights).mean()-1)/np.array(self.weights).std() > 5:
                 raise ValueError('average PU weight more than 5 standard deviations away from 1')
 
