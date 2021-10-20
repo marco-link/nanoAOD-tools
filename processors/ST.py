@@ -24,6 +24,8 @@ parser.add_argument('--nosys', dest='nosys',
                     action='store_true', default=False)
 parser.add_argument('--notagger', dest='notagger',
                     action='store_true', default=False)
+parser.add_argument('--invid', dest='invid',
+                    action='store_true', default=False)
 parser.add_argument('--year', dest='year',
                     action='store', type=str, default='2016', choices=['2016','2016preVFP','2017','2018'])
 parser.add_argument('--ntags', dest='ntags', type=int,
@@ -38,6 +40,7 @@ print "isSignal:",args.isSignal
 print "ntags:",args.ntags
 print "evaluate systematics:",not args.nosys
 print "evaluate tagger:",not args.notagger
+print "invert lepton id/iso:",args.invid
 print "inputs:",len(args.inputFiles)
 print "year:", args.year
 print "output directory:", args.output[0]
@@ -94,7 +97,7 @@ def leptonSequence():
             muonMaxEta=2.4,
             triggerMatch=True,
             muonID=MuonSelection.TIGHT,
-            muonIso=MuonSelection.VERYTIGHT,
+            muonIso=MuonSelection.INV if args.invid else MuonSelection.VERYTIGHT,
         ),
         SingleMuonTriggerSelection(
             inputCollection=lambda event: event.tightMuons,
@@ -112,7 +115,7 @@ def leptonSequence():
         ElectronSelection(
             inputCollection = lambda event: Collection(event, "Electron"),
             outputName = "tightElectrons",
-            electronID = ElectronSelection.WP90,
+            electronID = ElectronSelection.INV if args.invid else ElectronSelection.WP90,
             electronMinPt = minElectronPt[args.year],
             electronMaxEta = 2.4,
             storeKinematics=[],
@@ -133,11 +136,6 @@ def leptonSequence():
         EventSkim(selection=lambda event: (len(event.tightMuons) + len(event.tightElectrons)) == 1),
         EventSkim(selection=lambda event: (len(event.looseMuons) + len(event.looseElectrons)) == 0),
         
-        CombineLeptons(
-            muonCollection = lambda event: event.tightMuons,
-            electronCollection = lambda event: event.tightElectrons,
-            outputName = "tightLeptons"
-        ),
     ]
     return seq
     
@@ -149,7 +147,7 @@ def jetSelection(jetDict):
         seq.append(
             JetSelection(
                 inputCollection=jetCollection,
-                leptonCollectionDRCleaning=lambda event: event.tightLeptons,
+                leptonCollectionDRCleaning=lambda event: event.tightMuons+event.tightElectrons,
                 jetMinPt=30.,
                 jetMaxEta=4.7,
                 dRCleaning=0.4,
@@ -160,8 +158,8 @@ def jetSelection(jetDict):
         seq.append(
             BTagSelection(
                 inputCollection=lambda event,sys=systName: getattr(event,"selectedJets_"+sys),
-                outputBName="selectedBJets_"+systName,
-                outputLName="selectedLJets_"+systName,
+                flagName="isBTagged",
+                outputName="selectedBJets_"+systName,
                 jetMinPt=30.,
                 jetMaxEta=2.4,
                 workingpoint = BTagSelection.TIGHT,
@@ -173,24 +171,25 @@ def jetSelection(jetDict):
     systNames = jetDict.keys()
     seq.append(
         EventSkim(selection=lambda event, systNames=systNames: 
-            any([getattr(event, "nselectedJets_"+systName) > 2 for systName in systNames])
+            any([getattr(event, "nselectedJets_"+systName) >= 2 for systName in systNames])
         )
     )
     if args.ntags>=0:
         seq.append(
             EventSkim(selection=lambda event, systNames=systNames: 
-                any([getattr(event, "selectedBJets_"+systName) == args.ntags for systName in systNames])
+                any([len(filter(lambda jet: jet.isBTagged,getattr(event,"selectedJets_"+systName))) == args.ntags for systName in systNames])
             )
         )
     
-    seq.append(
-        ChargeTagging(
-            modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
-            featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
-            inputCollections = btaggedJetCollections,
-            taggerName = "bChargeTag",
+    if not args.notagger:
+        seq.append(
+            ChargeTagging(
+                modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
+                featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
+                inputCollections = jetDict.values(),
+                taggerName = "bChargeTag",
+            )
         )
-    )
     
     '''
     if isMC:
@@ -208,22 +207,34 @@ def jetSelection(jetDict):
     
 def eventReconstruction(uncertaintyDict):
     seq = []
-    for systName,(ljetCollection,bjetCollection,metObject) in uncertaintyDict.items():
-        #TODO: outputs are named wrong
+    for systName,(jetCollection,metObject) in uncertaintyDict.items():
         seq.append(WbosonReconstruction(
-            leptonObject = lambda event: event.tightLeptons[0],
+            leptonObject = lambda event: (event.tightMuons+event.tightElectrons)[0],
             metObject = metObject,
-            outputName=systName,
+            outputName='wbosons',
+            systName=systName
         ))
 
-        seq.append(TopReconstruction(
-            bJetCollection=bjetCollection,
-            lJetCollection=ljetCollection,
-            leptonObject=lambda event: event.tightLeptons[0],
-            wbosonCollection=lambda event,sys=systName: getattr(event,systName+"_w_candidates"),
+        seq.append(SingleTopReconstruction(
+            bJetCollection=lambda event: filter(lambda jet: jet.isBTagged,jetCollection(event)),
+            lJetCollection=lambda event: filter(lambda jet: not jet.isBTagged,jetCollection(event)),
+            leptonObject=lambda event: (event.tightMuons+event.tightElectrons)[0],
+            wbosonCollection=lambda event,sys=systName: getattr(event,"wbosons_"+sys),
             metObject = metObject,
-            outputName=systName,
+            outputName="top",
+            systName=systName,
         ))
+        if args.ntags<0 or args.ntags>=2:
+            seq.append(TTbarReconstruction(
+                bJetCollection=lambda event: filter(lambda jet: jet.isBTagged,jetCollection(event)),
+                lJetCollection=lambda event: filter(lambda jet: not jet.isBTagged,jetCollection(event)),
+                leptonObject=lambda event: (event.tightMuons+event.tightElectrons)[0],
+                wbosonCollection=lambda event,sys=systName: getattr(event,"wbosons_"+sys),
+                metObject = metObject,
+                templateFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/ttbar/ttbarTemplates.root",
+                outputName="ttbar",
+                systName=systName,
+            ))
         #TODO: does not yet work with uncertainties
         #XGBEvaluation(
         #    modelPath="${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/bdt/testBDT_bdt.bin",
@@ -296,7 +307,7 @@ else:
     )
 
     uncertaintyDict = {
-        "nominal": (lambda event: event.selectedLJets_nominal,lambda event: event.selectedBJets_nominal,lambda event: event.met_nominal),
+        "nominal": (lambda event: event.selectedJets_nominal,lambda event: event.met_nominal),
         #"jerUp": (lambda event: event.selectedLJets_jerUp,lambda event: event.selectedBJets_jerUp,lambda event: event.met_jerUp),
         #"jerDown": (lambda event: event.selectedLJets_jerDown,lambda event: event.selectedBJets_jerDown,lambda event: event.met_jerDown),
     }

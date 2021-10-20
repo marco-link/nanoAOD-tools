@@ -13,10 +13,12 @@ class CombineLeptons(Module):
         muonCollection = lambda event: Collection(event,"Muon"),
         electronCollection = lambda event: Collection(event,"Electron"),
         outputName = "leptons",
+        storeKinematics = []
     ):
         self.muonCollection = muonCollection
         self.electronCollection = electronCollection
         self.outputName=outputName
+        self.storeKinematics=storeKinematics
 
     def beginJob(self):
         pass
@@ -26,8 +28,10 @@ class CombineLeptons(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
-        if self.outputName is not None:
-            self.out.branch(self.outputName, "I")
+
+        self.out.branch("n"+self.outputName, "I")
+        for variable in self.storeKinematics:
+            self.out.branch(self.outputName+"_"+variable,"F",lenVar="n"+self.outputName)
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -47,6 +51,11 @@ class CombineLeptons(Module):
             leptons.append(electron)
             
         leptons = list(reversed(sorted(leptons,key=lambda x: x.pt)))
+        
+        self.out.fillBranch("n"+self.outputName,len(leptons))
+        for variable in self.storeKinematics:
+            self.out.fillBranch(self.outputName+"_"+variable,map(lambda lepton: getattr(lepton,variable), leptons))
+            
             
         setattr(event,self.outputName,leptons)
             

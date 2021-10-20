@@ -20,16 +20,16 @@ class BTagSelection(Module):
     def __init__(
          self,
          inputCollection=lambda event: Collection(event, "Jet"),
-         outputBName="selectedBJets",
-         outputLName="selectedLJets",
+         flagName = "isBTagged",
+         outputName="btaggedJets",
          jetMinPt=30.,
          jetMaxEta=2.4,
          workingpoint = TIGHT,
          storeKinematics=['pt', 'eta'],
      ):
         self.inputCollection = inputCollection
-        self.outputBName = outputBName
-        self.outputLName = outputLName
+        self.flagName = flagName
+        self.outputName = outputName
         self.jetMinPt = jetMinPt
         self.jetMaxEta = jetMaxEta
         self.storeKinematics = storeKinematics
@@ -61,9 +61,9 @@ class BTagSelection(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
         
-        self.out.branch("n"+self.outputBName, "I")
+        self.out.branch("n"+self.outputName, "I")
         for variable in self.storeKinematics:
-            self.out.branch(self.outputBName+"_"+variable, "F", lenVar="n"+self.outputBName)
+            self.out.branch(self.outputName+"_"+variable, "F", lenVar="n"+self.outputBName)
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -74,32 +74,37 @@ class BTagSelection(Module):
         jets = self.inputCollection(event)
 
 
-        selectedJets = []
-        unselectedJets = []
+        bJets = []
+        lJets = []
 
 
         for jet in jets:
             if jet.pt<self.jetMinPt:
-                unselectedJets.append(jet)
+                lJets.append(jet)
                 continue
         
             if math.fabs(jet.eta) > self.jetMaxEta:
-                unselectedJets.append(jet)
+                lJets.append(jet)
                 continue
 
             if not self.taggerFct(jet):
-                unselectedJets.append(jet)
+                lJets.append(jet)
                 continue
                
-            selectedJets.append(jet)
+            bJets.append(jet)
+            
+        for jet in bJets:
+            setattr(jet,self.flagName,True)
+        for jet in lJets:
+            setattr(jet,self.flagName,False)
 
-        self.out.fillBranch("n"+self.outputBName, len(selectedJets))
+        self.out.fillBranch("n"+self.outputName, len(bJets))
         for variable in self.storeKinematics:
-            self.out.fillBranch(self.outputBName+"_"+variable,
-                                map(lambda jet: getattr(jet, variable), selectedJets))
+            self.out.fillBranch(self.outputName+"_"+variable,
+                                map(lambda jet: getattr(jet, variable), bJets))
 
-        setattr(event, self.outputBName, selectedJets)
-        setattr(event, self.outputLName, unselectedJets)
+        setattr(event, self.outputName, bJets)
+        setattr(event, self.outputName+"_unselected", lJets)
 
         return True
 

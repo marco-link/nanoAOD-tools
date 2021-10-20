@@ -16,6 +16,8 @@ class PhysicsObject(object):
         self.__dict__["phi"] = phi
         self.__dict__["mass"] = mass
         for k in keys:
+            if k in ['pt','eta','phi','mass']:
+                raise Exception("ERROR - cannot store key in PhysicsObject: "+k)
             self.__dict__[k] = getattr(obj, k)
 
     def p4(self):

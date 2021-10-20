@@ -100,6 +100,8 @@ class ChargeTagging(Module):
         for jetCollection in self.inputCollections:
             jets = jetCollection(event)
             for ijet, jet in enumerate(jets):
+                if jet.pt<20 or math.fabs(jet.eta)>2.4:
+                    continue    
                 try:
                     global_jet_index = jetglobal_indices.index(jet._index)
                 except ValueError:
@@ -132,11 +134,14 @@ class ChargeTagging(Module):
         for jetCollection in self.inputCollections:
             jets = jetCollection(event)
             for ijet, jet in enumerate(jets):
+                resultDict = {}
                 if hasattr(jet, "globalIdx"):
                     for ilabel,labelName in enumerate(self.predictionLabels):
-                        setattr(jet,self.taggerName+"_"+labelName,predictionsPerIndex[jet.globalIdx][ilabel])
+                        resultDict[labelName] = predictionsPerIndex[jet.globalIdx][ilabel]
                 else:
                     for ilabel,labelName in enumerate(self.predictionLabels):
-                        setattr(jet,self.taggerName+"_"+labelName,-1.)
+                        resultDict[labelName] = -1.
+                setattr(jet,self.taggerName,resultDict)
 
         return True
+        
