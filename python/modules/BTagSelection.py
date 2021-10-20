@@ -18,27 +18,30 @@ class BTagSelection(Module):
     TIGHT=2
     
     def __init__(
-         self,
-         inputCollection=lambda event: Collection(event, "Jet"),
-         flagName = "isBTagged",
-         outputName="btaggedJets",
-         jetMinPt=30.,
-         jetMaxEta=2.4,
-         workingpoint = TIGHT,
-         storeKinematics=['pt', 'eta'],
-     ):
+        self,
+        inputCollection=lambda event: Collection(event, "Jet"),
+        flagName = "isBTagged",
+        outputName="btaggedJets",
+        jetMinPt=30.,
+        jetMaxEta=2.4,
+        workingpoint = TIGHT,
+        storeKinematics=['pt', 'eta'],
+        storeTruthKeys=[]
+    ):
+
         self.inputCollection = inputCollection
         self.flagName = flagName
         self.outputName = outputName
         self.jetMinPt = jetMinPt
         self.jetMaxEta = jetMaxEta
         self.storeKinematics = storeKinematics
+        self.storeTruthKeys = storeTruthKeys
         self.workingpoint = workingpoint
         
-        #TODO: need UL WPs for 2016; not available yet
+        #DONE - but also available in files
         wpValues = {
-            '2016': [ 0.0614, 0.3093, 0.7221 ], #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL16postVFP#AK4_b_tagging
-            '2016preVFP': [0.0480, 0.2489, 0.6377], #https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation2016Legacy
+            '2016preVFP': [0.0614, 0.3093, 0.7221], #https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation2016Legacy
+            '2016': [0.0480, 0.2489, 0.6377], #https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation106XUL16postVFP
             '2017': [0.0532, 0.3040, 0.7476], #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL17
             '2018': [0.0490, 0.2783, 0.7100] #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL18
         }
@@ -63,7 +66,9 @@ class BTagSelection(Module):
         
         self.out.branch("n"+self.outputName, "I")
         for variable in self.storeKinematics:
-            self.out.branch(self.outputName+"_"+variable, "F", lenVar="n"+self.outputBName)
+            self.out.branch(self.outputName+"_"+variable, "F", lenVar="n"+self.outputName)
+        for variable in self.storeTruthKeys:
+            self.out.branch(self.outputName+"_"+variable, "F", lenVar="n"+self.outputName)
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -102,6 +107,11 @@ class BTagSelection(Module):
         for variable in self.storeKinematics:
             self.out.fillBranch(self.outputName+"_"+variable,
                                 map(lambda jet: getattr(jet, variable), bJets))
+
+        for variable in self.storeTruthKeys:
+            self.out.fillBranch(self.outputName+"_"+variable,
+                                map(lambda jet: getattr(jet, variable), bJets))
+
 
         setattr(event, self.outputName, bJets)
         setattr(event, self.outputName+"_unselected", lJets)

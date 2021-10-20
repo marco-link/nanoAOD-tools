@@ -142,7 +142,7 @@ def leptonSequence():
 def jetSelection(jetDict):
     seq = []
     
-    btaggedJetCollections = []
+    selectedJetCollections = []
     for systName,jetCollection in jetDict.items():
         seq.append(
             JetSelection(
@@ -155,6 +155,8 @@ def jetSelection(jetDict):
                 outputName="selectedJets_"+systName,
             )
         )
+        selectedJetCollections.append(lambda event: getattr(event,"selectedJets_"+systName))
+        
         seq.append(
             BTagSelection(
                 inputCollection=lambda event,sys=systName: getattr(event,"selectedJets_"+sys),
@@ -164,10 +166,10 @@ def jetSelection(jetDict):
                 jetMaxEta=2.4,
                 workingpoint = BTagSelection.TIGHT,
                 storeKinematics=[],
+                storeTruthKeys = ['hadronFlavour','partonFlavour'],
             )
         )
-        btaggedJetCollections.append(lambda event, sys=systName: getattr(event,"selectedBJets_"+sys))
-        
+
     systNames = jetDict.keys()
     seq.append(
         EventSkim(selection=lambda event, systNames=systNames: 
@@ -186,11 +188,24 @@ def jetSelection(jetDict):
             ChargeTagging(
                 modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
                 featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
-                inputCollections = jetDict.values(),
+                inputCollections = selectedJetCollections,
+                filterJets = lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,
                 taggerName = "bChargeTag",
             )
         )
     
+    if isMC:
+        jesUncertForBtag = ['jes'+syst.replace('Total','') for syst in jesUncertaintyNames]
+        # to remove once breakdown available
+        if args.year != '2016preVFP':
+            jesUncertForBtag = ['jes']
+        seq.append(
+            btagSFProducer(
+                era=args.year,
+                jesSystsForShape = jesUncertForBtag,
+            )
+        )
+
     '''
     if isMC:
         seq.append(
@@ -267,6 +282,8 @@ if args.isData:
     )
 
 else:
+    analyzerChain.append(PUWeightProducer_dict[args.year]())
+
     jesUncertaintyNames = ["Total","Absolute","EC2","BBEC1", "HF","RelativeBal","FlavorQCD" ]
     for jesUncertaintyExtra in ["RelativeSample","HF","Absolute","EC2","BBEC1"]:
         jesUncertaintyNames.append(jesUncertaintyExtra+"_"+args.year.replace("preVFP",""))
@@ -288,7 +305,7 @@ else:
             propagateJER = False,
             outputJetPrefix = 'jets_',
             outputMetPrefix = 'met_',
-            jetKeys=['jetId', 'nConstituents','btagDeepFlavB'],
+            jetKeys=['jetId', 'nConstituents','btagDeepFlavB','hadronFlavour','partonFlavour'],
             metKeys = [],
         )
     )

@@ -20,6 +20,7 @@ class ChargeTagging(Module):
         modelPath,
         featureDictFile,
         inputCollections = [lambda event: Collection(event, "Jet")],
+        filterJets = lambda jet: True,
         taggerName = "nn",
     ):
         self.modelPath = os.path.expandvars(modelPath)
@@ -34,6 +35,7 @@ class ChargeTagging(Module):
         self.featureDict = feature_dict_module.featureDict
         self.predictionLabels = feature_dict_module.predictionLabels
         
+        self.filterJets = filterJets
         self.taggerName = taggerName
 
     def beginJob(self):
@@ -100,7 +102,7 @@ class ChargeTagging(Module):
         for jetCollection in self.inputCollections:
             jets = jetCollection(event)
             for ijet, jet in enumerate(jets):
-                if jet.pt<20 or math.fabs(jet.eta)>2.4:
+                if not self.filterJets(jet):
                     continue    
                 try:
                     global_jet_index = jetglobal_indices.index(jet._index)
