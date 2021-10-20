@@ -16,7 +16,7 @@ def getAnalyzerChain(year, isSignal, isData):
     # constants
     Wboson_mass = 80.385
     top_mass = 172.5
-    offshell_mass_window = 10
+    top_mass_window = 25
 
     minMuonPt = {2016: 25., 2017: 28., 2018: 25.}[year]
     minElectronPt = {2016: 29., 2017: 34., 2018: 34.}[year]
@@ -47,27 +47,6 @@ def getAnalyzerChain(year, isSignal, isData):
                 2017: 0.74890,
                 2018: 0.72640
             }[year]
-
-
-
-    reco_combinations = [
-        [WbReconstruction.RANDOM, WbReconstruction.RANDOM],
-        [WbReconstruction.RANDOM, WbReconstruction.TOP_BIAS],
-        [WbReconstruction.RANDOM, WbReconstruction.HIGH_PT],
-
-        [WbReconstruction.TOP_BIAS, WbReconstruction.RANDOM],
-        [WbReconstruction.TOP_BIAS, WbReconstruction.TOP_BIAS],
-        [WbReconstruction.TOP_BIAS, WbReconstruction.HIGH_PT],
-
-        [WbReconstruction.LOW_MET_PZ, WbReconstruction.RANDOM],
-        [WbReconstruction.LOW_MET_PZ, WbReconstruction.TOP_BIAS],
-        [WbReconstruction.LOW_MET_PZ, WbReconstruction.HIGH_PT],
-    ]
-
-
-
-
-
 
 
     analyzerChain = [
@@ -161,14 +140,22 @@ def getAnalyzerChain(year, isSignal, isData):
 
 
         JetGenInfo(
-            inputCollection=lambda event: event.nominal_selectedBJets,
-            outputName='nominal_selectedBJets',
+            inputCollection = lambda event: event.nominal_selectedBJets,
+            outputName = 'nominal_selectedBJets',
         ),
 
         JetGenChargeProducer(
-            JetCollection=lambda event: event.nominal_selectedBJets,
-            outputName='nominal_selectedBJets'
+            JetCollection = lambda event: event.nominal_selectedBJets,
+            outputName = 'nominal_selectedBJets'
         ),
+
+        CalculateVariable(
+            function = lambda event: map(lambda bjet: bjet.bPartonCharge, Collection(event, 'nominal_selectedBJets')),
+            outputName = 'nominal_selectedBJets_charge',
+            vartype = 'I',
+            length = 'nnominal_selectedBJets'
+        ),
+
 
         #ChargeTagging(
             #modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
@@ -201,15 +188,15 @@ def getAnalyzerChain(year, isSignal, isData):
             outputName = 'Reco_W',
         ),
 
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb',
-            #WbosonSelection = WbReconstruction.LOW_MET_PZ,
-            #BSelection = WbReconstruction.HIGH_PT,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
+        WbReconstruction(
+            WbosonCollection = lambda event: Collection(event, 'Reco_W'),
+            bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
+            outputName = 'Reco_Wb',
+            WbosonSelection = WbReconstruction.TOP_BIAS,
+            BSelection = WbReconstruction.TOP_BIAS,
+            top_mass = top_mass,
+            offshell_mass_window = top_mass_window,
+        ),
 
         #EventSkim(selection=lambda event: event.Reco_W_mass[event.Reco_Wb_W_idx] < 120 and abs(event.Reco_W_eta[event.Reco_Wb_W_idx]) < 4.0 ),
 
@@ -222,149 +209,23 @@ def getAnalyzerChain(year, isSignal, isData):
 
 
 
-
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb1',
-            #WbosonSelection = WbReconstruction.RANDOM,
-            #BSelection = WbReconstruction.RANDOM,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
-
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb2',
-            #WbosonSelection = WbReconstruction.RANDOM,
-            #BSelection = WbReconstruction.TOP_BIAS,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
-
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb3',
-            #WbosonSelection = WbReconstruction.RANDOM,
-            #BSelection = WbReconstruction.HIGH_PT,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
-
-
-
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb4',
-            #WbosonSelection = WbReconstruction.TOP_BIAS,
-            #BSelection = WbReconstruction.RANDOM,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
-
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb5',
-            #WbosonSelection = WbReconstruction.TOP_BIAS,
-            #BSelection = WbReconstruction.TOP_BIAS,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
-
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb6',
-            #WbosonSelection = WbReconstruction.TOP_BIAS,
-            #BSelection = WbReconstruction.HIGH_PT,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
-
-
-
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb7',
-            #WbosonSelection = WbReconstruction.LOW_MET_PZ,
-            #BSelection = WbReconstruction.RANDOM,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
-
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb8',
-            #WbosonSelection = WbReconstruction.LOW_MET_PZ,
-            #BSelection = WbReconstruction.TOP_BIAS,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
-
-        #WbReconstruction(
-            #WbosonCollection = lambda event: Collection(event, 'Reco_W'),
-            #bjetCollection = lambda event: Collection(event, 'nominal_selectedBJets'),
-            #outputName = 'Reco_Wb9',
-            #WbosonSelection = WbReconstruction.LOW_MET_PZ,
-            #BSelection = WbReconstruction.HIGH_PT,
-            #top_mass = top_mass,
-            #offshell_mass_window = offshell_mass_window,
-        #),
-
-
-
-
-
-
-
-
-
-        ## apply binning for asymmetry
-        #AsymBinProducer(
-            #massBranch='Reco_wb_mass',
-            #chargeBranch='Reco_wb_bjet_charge',
-            #outputName='Reco_AsymBin',
-            #mass=top_mass,
-            #masswindow=offshell_mass_window
-        #),
-
-
-        #if signal
-        ## calculate asymmetry for generator truth
-        #step3_analyzerChain.append(AsymBinProducer(
-                                        #massBranch='Gen_wb_mass',
-                                        #chargeBranch='Gen_wb_b_Charge',
-                                        #outputName='Reco_GenAsymBin',
-                                        #mass=top_mass,
-                                        #masswindow=offshell_mass_window
-                                #))
     ]
-
 
 
     if isSignal and not isData:
         analyzerChain.append(PartonLevel())
 
-        for i in range(9):
-            analyzerChain.append(
-                WbReconstruction(
-                    WbosonCollection = lambda event: Collection(event, 'partonLevel_W'),
-                    bjetCollection = lambda event: Collection(event, 'partonLevel_bquarks'),
-                    outputName = 'partonLevel_Wb{}'.format(i),
-                    WbosonSelection = reco_combinations[i][0],
-                    BSelection = reco_combinations[i][1],
-                    top_mass = top_mass,
-                    offshell_mass_window = offshell_mass_window,
-                )
+        analyzerChain.append(
+            WbReconstruction(
+                WbosonCollection = lambda event: Collection(event, 'partonLevel_W'),
+                bjetCollection = lambda event: Collection(event, 'partonLevel_bFromTop') if event.partonLevel_top_pt > 0 else Collection(event, 'partonLevel_bquarks'),
+                outputName = 'partonLevel_Wb{}'.format(i),
+                WbosonSelection = WbReconstruction.TOP_BIAS,
+                BSelection = WbReconstruction.TOP_BIAS,
+                top_mass = top_mass,
+                offshell_mass_window = top_mass_window,
             )
-
-
+        )
 
 
         analyzerChain.append(ParticleLevel())
@@ -377,22 +238,17 @@ def getAnalyzerChain(year, isSignal, isData):
             )
         )
 
-        for i in range(9):
-            analyzerChain.append(
-                WbReconstruction(
-                    WbosonCollection = lambda event: Collection(event, 'particleLevel_W'),
-                    bjetCollection = lambda event: Collection(event, 'particleLevel_bjets'),
-                    outputName = 'particleLevel_Wb{}'.format(i),
-                    WbosonSelection = reco_combinations[i][0],
-                    BSelection = reco_combinations[i][1],
-                    top_mass = top_mass,
-                    offshell_mass_window = offshell_mass_window,
-                )
+        analyzerChain.append(
+            WbReconstruction(
+                WbosonCollection = lambda event: Collection(event, 'particleLevel_W'),
+                bjetCollection = lambda event: Collection(event, 'particleLevel_bjets'),
+                outputName = 'particleLevel_Wb{}'.format(i),
+                WbosonSelection = WbReconstruction.TOP_BIAS,
+                BSelection = WbReconstruction.TOP_BIAS,
+                top_mass = top_mass,
+                offshell_mass_window = top_mass_window,
             )
-
-
-
-
+        )
 
 
 
