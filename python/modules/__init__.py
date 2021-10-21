@@ -33,6 +33,7 @@ from btagSFProducer import btagSFProducer
 #event
 from PUWeightProducer import puWeightProducer, PUWeightProducer_dict
 from GenWeightProducer import GenWeightProducer
+from TopPtWeightProducer import TopPtWeightProducer
 
 #event hypothesis
 from WbosonReconstruction import WbosonReconstruction
