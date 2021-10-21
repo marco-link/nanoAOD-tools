@@ -53,6 +53,8 @@ globalOptions = {
 Module.globalOptions = globalOptions
 
 isMC = not args.isData
+isPowheg = 'powheg' in args.inputFiles[0].lower()
+
 
 minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
 minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
@@ -334,6 +336,12 @@ if args.isSignal:
         PartonLevel()
     )
 
+if not args.isData and isPowheg:
+    analyzerChain.append(
+        GenWeightProducer(
+            isPowheg = True
+        )
+    )
 
 
 storeVariables = [
