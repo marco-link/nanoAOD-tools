@@ -29,6 +29,7 @@ parser.add_argument('--year', dest='year',
 parser.add_argument('--nleptons', dest='nleptons', type=int,
                     default=1, choices=[1,2])
 parser.add_argument('--input', dest='inputFiles', action='append', default=[])
+parser.add_argument('--maxEvents', dest='maxEvents', type=int, default=None)
 parser.add_argument('output', nargs=1)
 
 args = parser.parse_args()
@@ -40,6 +41,8 @@ print "evaluate tagger:",not args.notagger
 print "inputs:",len(args.inputFiles)
 print "year:", args.year
 print "output directory:", args.output[0]
+if args.maxEvents:
+    print 'max number of events', args.maxEvents
 
 globalOptions = {
     "isData": args.isData,
@@ -331,6 +334,8 @@ if args.isSignal:
         PartonLevel()
     )
 
+
+
 storeVariables = [
     [lambda tree: tree.branch("PV_npvs", "I"), lambda tree,
      event: tree.fillBranch("PV_npvs", event.PV_npvs)],
@@ -362,7 +367,8 @@ p = PostProcessor(
     args.inputFiles,
     cut="(nJet>1)&&((nElectron+nMuon)>0)",
     modules=analyzerChain,
-    friend=True
+    friend=True,
+    maxEntries = args.maxEvents
 )
 
 p.run()
