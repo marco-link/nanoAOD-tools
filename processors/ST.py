@@ -54,7 +54,7 @@ Module.globalOptions = globalOptions
 
 isMC = not args.isData
 isPowheg = 'powheg' in args.inputFiles[0].lower()
-
+isPowhegTTbar = 'TTTo' in args.inputFiles[0] and isPowheg
 
 minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
 minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
@@ -342,6 +342,12 @@ if not args.isData and isPowheg:
             isPowheg = True
         )
     )
+    if isPowhegTTbar:
+        analyzerChain.append(
+            TopPtWeightProducer(
+                mode='data/NLO'
+            )
+        )
 
 
 storeVariables = [
