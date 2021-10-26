@@ -14,9 +14,11 @@ class GenWeightProducer(Module):
         if self.isSignal:
             self.nPDFs = 101
 
-        self.fragWeights = ['fragCP5BLVsPt','fragCP5BLdownVsPt','fragCP5BLupVsPt',
-                            'fragCP5PetersonVsPt','fragCP5PetersondownVsPt','fragCP5PetersonupVsPt',
-                            'semilepbrdown','semilepbrup']
+        # to be added once new files available
+        self.fragWeights = []
+        # self.fragWeights = ['fragCP5BLVsPt','fragCP5BLdownVsPt','fragCP5BLupVsPt',
+        #                     'fragCP5PetersonVsPt','fragCP5PetersondownVsPt','fragCP5PetersonupVsPt',
+        #                     'semilepbrdown','semilepbrup']
 
         pass
 
