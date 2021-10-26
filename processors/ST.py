@@ -336,10 +336,10 @@ if args.isSignal:
         PartonLevel()
     )
 
-if not args.isData and isPowheg:
+if not args.isData:
     analyzerChain.append(
         GenWeightProducer(
-            isPowheg = True
+            isPowheg = isPowheg
         )
     )
     if isPowhegTTbar:

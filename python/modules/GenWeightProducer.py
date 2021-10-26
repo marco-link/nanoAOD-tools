@@ -12,7 +12,14 @@ class GenWeightProducer(Module):
             self.nPSweights = 4
             self.nMEweights = 9
         else:
-            raise ValueError('Generator weights only implemented for powheg')            
+            # to implement
+            self.nPDFs = 0
+            self.nPSweights = 0
+            self.nMEweights = 0
+
+        self.fragWeights = ['fragCP5BLVsPt','fragCP5BLdownVsPt','fragCP5BLupVsPt',
+                            'fragCP5PetersonVsPt','fragCP5PetersondownVsPt','fragCP5PetersonupVsPt',
+                            'semilepbrdown','semilepbrup']
 
         pass
 
@@ -30,53 +37,67 @@ class GenWeightProducer(Module):
             self.out.branch('PDFweight_{}'.format(PDF),'F')
 
         # ME weights
-        self.out.branch('MEweight_murDown_mufDown','F')
-        self.out.branch('MEweight_murDown_mufNominal','F')
-        self.out.branch('MEweight_murDown_mufUp','F')
-        self.out.branch('MEweight_murNominal_mufDown','F')
-        self.out.branch('MEweight_murNominal_mufNominal','F')
-        self.out.branch('MEweight_murNominal_mufUp','F')
-        self.out.branch('MEweight_murUp_mufDown','F')
-        self.out.branch('MEweight_murUp_mufNominal','F')
-        self.out.branch('MEweight_murUp_mufUp','F')
+        if self.nMEweights > 0:
+            self.out.branch('MEweight_murDown_mufDown','F')
+            self.out.branch('MEweight_murDown_mufNominal','F')
+            self.out.branch('MEweight_murDown_mufUp','F')
+            self.out.branch('MEweight_murNominal_mufDown','F')
+            self.out.branch('MEweight_murNominal_mufNominal','F')
+            self.out.branch('MEweight_murNominal_mufUp','F')
+            self.out.branch('MEweight_murUp_mufDown','F')
+            self.out.branch('MEweight_murUp_mufNominal','F')
+            self.out.branch('MEweight_murUp_mufUp','F')
 
         # PS weights
-        self.out.branch('PSweight_ISRUp_FSRNominal','F')
-        self.out.branch('PSweight_ISRNominal_FSRUp','F')
-        self.out.branch('PSweight_ISRDown_FSRNominal','F')
-        self.out.branch('PSweight_ISRNominal_FSRDown','F')
+        if self.nPSweights > 0:
+            self.out.branch('PSweight_ISRUp_FSRNominal','F')
+            self.out.branch('PSweight_ISRNominal_FSRUp','F')
+            self.out.branch('PSweight_ISRDown_FSRNominal','F')
+            self.out.branch('PSweight_ISRNominal_FSRDown','F')
+
+        for fragWeight in self.fragWeights:
+            self.out.branch('fragEventWeight_{}'.format(fragWeight),'F')
+
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
 
     def analyze(self, event):
         
-        if event.nLHEPdfWeight != self.nPDFs:
+        if self.nPDFs > 0 and event.nLHEPdfWeight != self.nPDFs:
             raise ValueError('wrong number of PDF eigenvectors')
-        if event.nLHEScaleWeight != self.nMEweights:
+        if self.nMEweights > 0 and event.nLHEScaleWeight != self.nMEweights:
             raise ValueError('wrong number of ME weights')
-        if event.nPSWeight != self.nPSweights:
+        if self.nPSweights > 0 and event.nPSWeight != self.nPSweights:
             raise ValueError('wrong number of PS weights')
           
         for i in range(0,self.nPDFs):
             self.out.fillBranch('PDFweight_{}'.format(i), event.LHEPdfWeight[i])
 
         # MEweights = getattr(event,'LHEScaleWeight')
-        self.out.fillBranch('MEweight_murDown_mufDown',event.LHEScaleWeight[0])
-        self.out.fillBranch('MEweight_murDown_mufNominal',event.LHEScaleWeight[1])
-        self.out.fillBranch('MEweight_murDown_mufUp',event.LHEScaleWeight[2])
-        self.out.fillBranch('MEweight_murNominal_mufDown',event.LHEScaleWeight[3])
-        self.out.fillBranch('MEweight_murNominal_mufNominal',event.LHEScaleWeight[4])
-        self.out.fillBranch('MEweight_murNominal_mufUp',event.LHEScaleWeight[5])
-        self.out.fillBranch('MEweight_murUp_mufDown',event.LHEScaleWeight[6])
-        self.out.fillBranch('MEweight_murUp_mufNominal',event.LHEScaleWeight[7])
-        self.out.fillBranch('MEweight_murUp_mufUp',event.LHEScaleWeight[8])
+        if self.nMEweights > 0:
+            self.out.fillBranch('MEweight_murDown_mufDown',event.LHEScaleWeight[0])
+            self.out.fillBranch('MEweight_murDown_mufNominal',event.LHEScaleWeight[1])
+            self.out.fillBranch('MEweight_murDown_mufUp',event.LHEScaleWeight[2])
+            self.out.fillBranch('MEweight_murNominal_mufDown',event.LHEScaleWeight[3])
+            self.out.fillBranch('MEweight_murNominal_mufNominal',event.LHEScaleWeight[4])
+            self.out.fillBranch('MEweight_murNominal_mufUp',event.LHEScaleWeight[5])
+            self.out.fillBranch('MEweight_murUp_mufDown',event.LHEScaleWeight[6])
+            self.out.fillBranch('MEweight_murUp_mufNominal',event.LHEScaleWeight[7])
+            self.out.fillBranch('MEweight_murUp_mufUp',event.LHEScaleWeight[8])
 
         # PSweights = getattr(event,'PSWeight')
-        self.out.fillBranch('PSweight_ISRUp_FSRNominal',event.PSWeight[0])
-        self.out.fillBranch('PSweight_ISRNominal_FSRUp',event.PSWeight[1])
-        self.out.fillBranch('PSweight_ISRDown_FSRNominal',event.PSWeight[2])
-        self.out.fillBranch('PSweight_ISRNominal_FSRDown',event.PSWeight[3])
+        if self.nPSweights > 0:
+            self.out.fillBranch('PSweight_ISRUp_FSRNominal',event.PSWeight[0])
+            self.out.fillBranch('PSweight_ISRNominal_FSRUp',event.PSWeight[1])
+            self.out.fillBranch('PSweight_ISRDown_FSRNominal',event.PSWeight[2])
+            self.out.fillBranch('PSweight_ISRNominal_FSRDown',event.PSWeight[3])
+
+        for fragWeight in self.fragWeights:
+            weight = 1.
+            for i in range(0,len(getattr(event,'GenJet_{}'.format(fragWeight)))):
+                weight *= getattr(event,'GenJet_{}'.format(fragWeight)).At(i)
+            self.out.fillBranch('fragEventWeight_{}'.format(fragWeight),weight)
 
         return True
 
