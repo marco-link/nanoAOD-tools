@@ -4,18 +4,15 @@ import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 class GenWeightProducer(Module):
-    def __init__(self, isPowheg=True):
-        self.isPowheg = isPowheg
+    def __init__(self, isSignal=False):
+        self.isSignal = isSignal
 
-        if self.isPowheg:
-            self.nPDFs = 103
-            self.nPSweights = 4
-            self.nMEweights = 9
-        else:
-            # to implement
-            self.nPDFs = 0
-            self.nPSweights = 0
-            self.nMEweights = 0
+        self.nPDFs = 103
+        self.nPSweights = 4
+        self.nMEweights = 9
+
+        if self.isSignal:
+            self.nPDFs = 101
 
         self.fragWeights = ['fragCP5BLVsPt','fragCP5BLdownVsPt','fragCP5BLupVsPt',
                             'fragCP5PetersonVsPt','fragCP5PetersondownVsPt','fragCP5PetersonupVsPt',

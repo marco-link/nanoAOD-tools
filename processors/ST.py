@@ -339,7 +339,7 @@ if args.isSignal:
 if not args.isData:
     analyzerChain.append(
         GenWeightProducer(
-            isPowheg = isPowheg
+            isSignal = args.isSignal
         )
     )
     if isPowhegTTbar:
