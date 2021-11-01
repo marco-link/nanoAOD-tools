@@ -29,7 +29,7 @@ parser.add_argument('--invid', dest='invid',
 parser.add_argument('--year', dest='year',
                     action='store', type=str, default='2016', choices=['2016','2016preVFP','2017','2018'])
 parser.add_argument('--ntags', dest='ntags', type=int,
-                    default=1, choices=[-1,0,1,2])
+                    default=-1, choices=[-1,0,1,2])
 parser.add_argument('-i','--input', dest='inputFiles', action='append', default=[])
 parser.add_argument('output', nargs=1)
 
@@ -284,10 +284,13 @@ if args.isData:
 else:
     analyzerChain.append(PUWeightProducer_dict[args.year]())
 
-    jesUncertaintyNames = ["Total","Absolute","EC2","BBEC1", "HF","RelativeBal","FlavorQCD" ]
-    for jesUncertaintyExtra in ["RelativeSample","HF","Absolute","EC2","BBEC1"]:
-        jesUncertaintyNames.append(jesUncertaintyExtra+"_"+args.year.replace("preVFP",""))
-    print "JECs: ",jesUncertaintyNames
+    if args.nosys:
+        jesUncertaintyNames = []
+    else:
+        jesUncertaintyNames = ["Total","Absolute","EC2","BBEC1", "HF","RelativeBal","FlavorQCD" ]
+        for jesUncertaintyExtra in ["RelativeSample","HF","Absolute","EC2","BBEC1"]:
+            jesUncertaintyNames.append(jesUncertaintyExtra+"_"+args.year.replace("preVFP",""))
+        print "JECs: ",jesUncertaintyNames
 
     analyzerChain.append(
         JetMetUncertainties(
@@ -312,23 +315,31 @@ else:
 
     jetDict = {
         "nominal": lambda event: event.jets_nominal,
-        "jerUp": lambda event: event.jets_jerUp,
-        "jerDown": lambda event: event.jets_jerDown,
     }
-    for jesUncertaintyName in jesUncertaintyNames:
-        jetDict['jes'+jesUncertaintyName+"Up"] = lambda event,sys=jesUncertaintyName: getattr(event,"jets_jes"+sys+"Up")
-        jetDict['jes'+jesUncertaintyName+"Down"] = lambda event,sys=jesUncertaintyName: getattr(event,"jets_jes"+sys+"Down")
+    if not args.nosys:
+        jetDict["jerUp"] = lambda event: event.jets_jerUp
+        jetDict["jerDown"] = lambda event: event.jets_jerDown
+        
+        for jesUncertaintyName in jesUncertaintyNames:
+            jetDict['jes'+jesUncertaintyName+"Up"] = lambda event,sys=jesUncertaintyName: getattr(event,"jets_jes"+sys+"Up")
+            jetDict['jes'+jesUncertaintyName+"Down"] = lambda event,sys=jesUncertaintyName: getattr(event,"jets_jes"+sys+"Down")
 
     analyzerChain.extend(
         jetSelection(jetDict)
     )
 
     uncertaintyDict = {
-        "nominal": (lambda event: event.selectedJets_nominal,lambda event: event.met_nominal),
-        #"jerUp": (lambda event: event.selectedLJets_jerUp,lambda event: event.selectedBJets_jerUp,lambda event: event.met_jerUp),
-        #"jerDown": (lambda event: event.selectedLJets_jerDown,lambda event: event.selectedBJets_jerDown,lambda event: event.met_jerDown),
+        "nominal": (lambda event: event.selectedJets_nominal,lambda event: event.met_nominal)
     }
-    #TODO: add all uncs
+    if not args.nosys:
+        uncertaintyDict["jerUp"] = (lambda event: event.selectedJets_jerUp,lambda event: event.met_jerUp)
+        uncertaintyDict["jerDown"] = (lambda event: event.selectedJets_jerDown,lambda event: event.met_jerDown)
+        uncertaintyDict["unclEnUp"] = (lambda event: event.selectedJets_nominal,lambda event: event.met_unclEnUp)
+        uncertaintyDict["unclEnDown"] = (lambda event: event.selectedJets_nominal,lambda event: event.met_unclEnDown)
+        for jesUncertaintyName in jesUncertaintyNames:
+            uncertaintyDict['jes'+jesUncertaintyName+"Up"] = (lambda event,sys=jesUncertaintyName: getattr(event,"selectedJets_jes"+sys+"Up"), lambda event,sys=jesUncertaintyName: getattr(event,"met_jes"+sys+"Up"))
+            uncertaintyDict['jes'+jesUncertaintyName+"Down"] = (lambda event,sys=jesUncertaintyName: getattr(event,"selectedJets_jes"+sys+"Down"), lambda event,sys=jesUncertaintyName: getattr(event,"met_jes"+sys+"Down"))
+
     analyzerChain.extend(
         eventReconstruction(uncertaintyDict)
     )
