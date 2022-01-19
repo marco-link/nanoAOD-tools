@@ -204,6 +204,7 @@ def jetSelection(jetDict):
             btagSFProducer(
                 era=args.year,
                 jesSystsForShape = jesUncertForBtag,
+                nosyst = args.nosys
             )
         )
 
