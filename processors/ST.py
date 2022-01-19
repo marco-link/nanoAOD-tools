@@ -29,6 +29,7 @@ parser.add_argument('--year', dest='year',
 parser.add_argument('--nleptons', dest='nleptons', type=int,
                     default=1, choices=[1,2])
 parser.add_argument('--input', dest='inputFiles', action='append', default=[])
+parser.add_argument('--maxEvents', dest='maxEvents', type=int, default=None)
 parser.add_argument('output', nargs=1)
 
 args = parser.parse_args()
@@ -40,6 +41,8 @@ print "evaluate tagger:",not args.notagger
 print "inputs:",len(args.inputFiles)
 print "year:", args.year
 print "output directory:", args.output[0]
+if args.maxEvents:
+    print 'max number of events', args.maxEvents
 
 globalOptions = {
     "isData": args.isData,
@@ -50,6 +53,8 @@ globalOptions = {
 Module.globalOptions = globalOptions
 
 isMC = not args.isData
+isPowheg = 'powheg' in args.inputFiles[0].lower()
+isPowhegTTbar = 'TTTo' in args.inputFiles[0] and isPowheg
 
 minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
 minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
@@ -199,6 +204,7 @@ def jetSelection(jetDict):
             btagSFProducer(
                 era=args.year,
                 jesSystsForShape = jesUncertForBtag,
+                nosyst = args.nosys
             )
         )
 
@@ -331,6 +337,20 @@ if args.isSignal:
         PartonLevel()
     )
 
+if not args.isData:
+    analyzerChain.append(
+        GenWeightProducer(
+            isSignal = args.isSignal
+        )
+    )
+    if isPowhegTTbar:
+        analyzerChain.append(
+            TopPtWeightProducer(
+                mode='data/NLO'
+            )
+        )
+
+
 storeVariables = [
     [lambda tree: tree.branch("PV_npvs", "I"), lambda tree,
      event: tree.fillBranch("PV_npvs", event.PV_npvs)],
@@ -348,6 +368,17 @@ if not globalOptions["isData"]:
                            event: tree.fillBranch("genweight",
                            event.Generator_weight)])
 
+    L1prefirWeights =  ['Dn', 'Nom', 'Up', 'ECAL_Dn', 'ECAL_Nom', 'ECAL_Up',
+                        'Muon_Nom', 'Muon_StatDn', 'Muon_StatUp', 'Muon_SystDn', 'Muon_SystUp']
+
+    for L1prefirWeight in L1prefirWeights:
+        storeVariables.append([
+            lambda tree, L1prefirWeight=L1prefirWeight: tree.branch('L1PreFiringWeight_{}'.format(L1prefirWeight.replace('Dn','Down').replace('Nom','Nominal')), "F"),
+            lambda tree, event, L1prefirWeight=L1prefirWeight: tree.fillBranch('L1PreFiringWeight_{}'.format(L1prefirWeight.replace('Dn','Down').replace('Nom','Nominal')),
+                                                                               getattr(event,'L1PreFiringWeight_{}'.format(L1prefirWeight)))
+        ])
+
+
     if args.isSignal:
         for coupling in range(1,106):
             storeVariables.append([
@@ -362,7 +393,8 @@ p = PostProcessor(
     args.inputFiles,
     cut="(nJet>1)&&((nElectron+nMuon)>0)",
     modules=analyzerChain,
-    friend=True
+    friend=True,
+    maxEntries = args.maxEvents
 )
 
 p.run()

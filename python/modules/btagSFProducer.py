@@ -36,13 +36,15 @@ class btagSFProducer(Module):
 
     def __init__(
             self, era, algo='DeepJet', selectedWPs=['shape_corr'],
-            sfFileName=None, verbose=0, jesSystsForShape=["jes"]
+            sfFileName=None, verbose=0, jesSystsForShape=["jes"],
+            nosyst = False
     ):
         self.era = era
         self.algo = algo.lower()
         self.selectedWPs = selectedWPs
         self.verbose = verbose
         self.jesSystsForShape = jesSystsForShape
+        self.nosyst = nosyst
         # CV: Return value of BTagCalibrationReader::eval_auto_bounds() is zero
         # in case jet abs(eta) > 2.4 !!
         self.max_abs_eta = 2.4
@@ -126,7 +128,8 @@ class btagSFProducer(Module):
         self.systs.append("up")
         self.systs.append("down")
         self.central_and_systs = ["central"]
-        self.central_and_systs.extend(self.systs)
+        if not self.nosyst:
+            self.central_and_systs.extend(self.systs)
 
         self.systs_shape_corr = []
         for syst in ['lf', 'hf',
@@ -136,7 +139,8 @@ class btagSFProducer(Module):
             self.systs_shape_corr.append("up_%s" % syst)
             self.systs_shape_corr.append("down_%s" % syst)
         self.central_and_systs_shape_corr = ["central"]
-        self.central_and_systs_shape_corr.extend(self.systs_shape_corr)
+        if not self.nosyst:
+            self.central_and_systs_shape_corr.extend(self.systs_shape_corr)
 
         self.branchNames_central_and_systs = {}
         for wp in self.selectedWPs:
