@@ -69,9 +69,9 @@ class SingleMuonTriggerSelection(Module):
         self.out.branch(self.outputName+"_flag","I")
         
         if not self.globalOptions["isData"] and self.storeWeights:
-            self.out.branch(self.outputName+"_weight_trigger_nominal","F")
-            self.out.branch(self.outputName+"_weight_trigger_up","F")
-            self.out.branch(self.outputName+"_weight_trigger_down","F")
+            self.out.branch(self.outputName+"_weight_trigger_{}_nominal".format(Module.globalOptions['year'].replace('preVFP','')),"F")
+            self.out.branch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),"F")
+            self.out.branch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),"F")
             
             
         
@@ -106,9 +106,9 @@ class SingleMuonTriggerSelection(Module):
         self.out.fillBranch(self.outputName+"_flag", trigger_flag)
             
         if not Module.globalOptions["isData"] and self.storeWeights:
-            self.out.fillBranch(self.outputName+"_weight_trigger_nominal",weight_trigger_nominal)
-            self.out.fillBranch(self.outputName+"_weight_trigger_up",weight_trigger_up)
-            self.out.fillBranch(self.outputName+"_weight_trigger_down",weight_trigger_down)
+            self.out.fillBranch(self.outputName+"_weight_trigger_{}_nominal".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_nominal)
+            self.out.fillBranch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_up)
+            self.out.fillBranch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_down)
 
         return True
         
