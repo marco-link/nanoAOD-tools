@@ -6,6 +6,8 @@
 
 #include "PhysicsTools/NanoAODTools/interface/TFEval.h"
 #include "PhysicsTools/NanoAODTools/interface/EventShapes.h"
+#include "PhysicsTools/NanoAODTools/interface/NeutrinoReco.h"
+
 
 PyJetResolutionWrapper jetRes;
 PyJetResolutionScaleFactorWrapper jetResScaleFactor;
@@ -19,4 +21,7 @@ TFEval::BranchAccessorTmpl<float> branchAccessorFloat(nullptr);
 TFEval::ArrayFeatureGroup arrayFeatureGroup("blub",10,10,&branchAccessorInt);
 TFEval::ValueFeatureGroup valueFeatureGroup("blub",10);
 TFEval::Result result;
+
 EventShapes evShapes;
+
+NeutrinoReco neutrinoReco;

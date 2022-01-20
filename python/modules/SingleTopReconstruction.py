@@ -11,7 +11,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 from utils import deltaR, deltaPhi, PhysicsObject
 
-class TopReconstruction(Module):
+class SingleTopReconstruction(Module):
 
     MTOP = 172.5
 
@@ -23,6 +23,7 @@ class TopReconstruction(Module):
          wbosonCollection=lambda event: [],
          metObject=lambda event: Object("MET"),
          outputName="top",
+         systName = "nominal",
      ):
         self.bJetCollection = bJetCollection
         self.lJetCollection = lJetCollection
@@ -31,7 +32,7 @@ class TopReconstruction(Module):
         self.metObject = metObject
         
         self.outputName = outputName
-        
+        self.systName = systName
 
 
     def beginJob(self):
@@ -42,21 +43,16 @@ class TopReconstruction(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
-        self.out.branch(self.outputName+"_top_mass", "F")
-        self.out.branch(self.outputName+"_top_pt", "F")
-        self.out.branch(self.outputName+"_top_eta", "F")
-        self.out.branch(self.outputName+"_top_cosPolarization", "F")
         
-        self.out.branch(self.outputName+"_ljet_eta", "F")
-        self.out.branch(self.outputName+"_bjet_lepton_deta", "F")
-        self.out.branch(self.outputName+"_ljet_bjet_dR", "F")
-        self.out.branch(self.outputName+"_wboson_cosHelicity", "F")
+        self.out.branch(self.outputName+"_mass_"+self.systName, "F")
+        self.out.branch(self.outputName+"_pt_"+self.systName, "F")
+        self.out.branch(self.outputName+"_eta_"+self.systName, "F")
+        self.out.branch(self.outputName+"_cosPolz_"+self.systName, "F")
+        self.out.branch(self.outputName+"_cosWhel_"+self.systName, "F")
         
-        self.out.branch(self.outputName+"_eventShape_isotropy", "F")
-        self.out.branch(self.outputName+"_eventShape_circularity", "F")
-        self.out.branch(self.outputName+"_eventShape_sphericity", "F")
-        self.out.branch(self.outputName+"_eventShape_aplanarity", "F")
-        self.out.branch(self.outputName+"_eventShape_C", "F")
+        self.out.branch(self.outputName+"_ljet_eta_"+self.systName, "F")
+        self.out.branch(self.outputName+"_bjet_lepton_deta_"+self.systName, "F")
+        self.out.branch(self.outputName+"_bjet_ljet_dR_"+self.systName, "F")
         
         
         
@@ -72,17 +68,17 @@ class TopReconstruction(Module):
         met = self.metObject(event)
         
         if len(ljets+bjets)<2 or len(wbosons)==0:
-            self.out.fillBranch(self.outputName+"_top_mass", -1.0)
-            self.out.fillBranch(self.outputName+"_top_pt", -1.0)
-            self.out.fillBranch(self.outputName+"_top_eta", 0.0)
-            self.out.fillBranch(self.outputName+"_top_cosPolarization", 0.0)
+            self.out.fillBranch(self.outputName+"_mass_"+self.systName, -1)
+            self.out.fillBranch(self.outputName+"_pt_"+self.systName, -1)
+            self.out.fillBranch(self.outputName+"_eta_"+self.systName, 0)
+            self.out.fillBranch(self.outputName+"_cosPolz_"+self.systName, -10)
+            self.out.fillBranch(self.outputName+"_cosWhel_"+self.systName, -10)
             
-            self.out.fillBranch(self.outputName+"_ljet_eta", 0.0)
-            self.out.fillBranch(self.outputName+"_bjet_lepton_deta", 0.0)
-            self.out.fillBranch(self.outputName+"_ljet_bjet_dR", 0.0)
-            self.out.fillBranch(self.outputName+"_wboson_cosHelicity", 0.0)
+            self.out.fillBranch(self.outputName+"_ljet_eta_"+self.systName, 0)
+            self.out.fillBranch(self.outputName+"_bjet_lepton_deta_"+self.systName, -1)
+            self.out.fillBranch(self.outputName+"_bjet_ljet_dR_"+self.systName, -1)
             return True
-            
+        
             
         sortedLjets = sorted(ljets,key=lambda x: math.fabs(x.eta), reverse=True) #sort forward
         sortedBjets = sorted(bjets,key=lambda x: x.pt, reverse=True) #sort pT
@@ -100,7 +96,8 @@ class TopReconstruction(Module):
             ljet = sortedBjets[1] #subleading pT
             bjet = sortedBjets[0] #leading pT
         
-        
+        #TODO: move to dedicated module?
+        '''
         eventShapes = ROOT.EventShapes()
         eventShapes.addObject(lepton.pt, lepton.eta, lepton.phi, 0.0)
         eventShapes.addObject(ljet.pt, ljet.eta, ljet.phi, 0.0)
@@ -112,43 +109,41 @@ class TopReconstruction(Module):
         self.out.fillBranch(self.outputName+"_eventShape_sphericity", eventShapes.sphericity())
         self.out.fillBranch(self.outputName+"_eventShape_aplanarity", eventShapes.aplanarity())
         self.out.fillBranch(self.outputName+"_eventShape_C", eventShapes.C())
+        '''
         
         #take wboson that gives candidate mass closest to mtop
-        mbestTop = 1000000
+        mbestTop = 1e12
         
         for i in range(len(wbosons)):
             topP4 = wbosons[i].p4()+bjet.p4()
-            if math.fabs(min(mbestTop-1,topP4.M())-TopReconstruction.MTOP)<mbestTop:
+            if math.fabs(topP4.M()-SingleTopReconstruction.MTOP)<math.fabs(mbestTop-SingleTopReconstruction.MTOP):
                 mbestTop = topP4.M()
                 wboson = wbosons[i]
                 top = PhysicsObject(None, pt=topP4.Pt(), eta=topP4.Eta(), phi=topP4.Phi(), mass=topP4.M())
    
-        
-
-        setattr(event,self.outputName+"_top_candidate",top)
+        setattr(event,self.outputName,top)
         
         leptonInWbosonRestframe = lepton.p4()
         leptonInWbosonRestframe.Boost(-wboson.p4().BoostVector())
         topInWbosonRestframe = -top.p4()
         topInWbosonRestframe.Boost(-wboson.p4().BoostVector())
-        cosWPol = leptonInWbosonRestframe.Vect().Dot(topInWbosonRestframe.Vect())/leptonInWbosonRestframe.Vect().Mag()/topInWbosonRestframe.Vect().Mag()
+        cosWhel = leptonInWbosonRestframe.Vect().Dot(topInWbosonRestframe.Vect())/leptonInWbosonRestframe.Vect().Mag()/topInWbosonRestframe.Vect().Mag()
         
         leptonInTopRestframe = lepton.p4()
         leptonInTopRestframe.Boost(-top.p4().BoostVector())
         ljetInTopRestframe = ljet.p4()
         ljetInTopRestframe.Boost(-top.p4().BoostVector())
-        cosTopPol = leptonInTopRestframe.Vect().Dot(ljetInTopRestframe.Vect())/leptonInTopRestframe.Vect().Mag()/ljetInTopRestframe.Vect().Mag()
+        cosTopPolz = leptonInTopRestframe.Vect().Dot(ljetInTopRestframe.Vect())/leptonInTopRestframe.Vect().Mag()/ljetInTopRestframe.Vect().Mag()
         
+        self.out.fillBranch(self.outputName+"_mass_"+self.systName, top.mass)
+        self.out.fillBranch(self.outputName+"_pt_"+self.systName, top.pt)
+        self.out.fillBranch(self.outputName+"_eta_"+self.systName, top.eta)
+        self.out.fillBranch(self.outputName+"_cosPolz_"+self.systName, cosTopPolz)
+        self.out.fillBranch(self.outputName+"_cosWhel_"+self.systName, cosWhel)
         
-        self.out.fillBranch(self.outputName+"_top_mass", top.mass)
-        self.out.fillBranch(self.outputName+"_top_pt", top.pt)
-        self.out.fillBranch(self.outputName+"_top_eta", top.eta)
-        self.out.fillBranch(self.outputName+"_top_cosPolarization", cosTopPol)
-        
-        self.out.fillBranch(self.outputName+"_ljet_eta", ljet.eta)
-        self.out.fillBranch(self.outputName+"_bjet_lepton_deta", math.fabs(bjet.eta-lepton.eta))
-        self.out.fillBranch(self.outputName+"_ljet_bjet_dR", deltaR(ljet,bjet))
-        self.out.fillBranch(self.outputName+"_wboson_cosHelicity", cosWPol)
+        self.out.fillBranch(self.outputName+"_ljet_eta_"+self.systName, ljet.eta)
+        self.out.fillBranch(self.outputName+"_bjet_lepton_deta_"+self.systName,  math.fabs(bjet.eta-lepton.eta))
+        self.out.fillBranch(self.outputName+"_bjet_ljet_dR_"+self.systName, deltaR(ljet,bjet))
         
         return True
 

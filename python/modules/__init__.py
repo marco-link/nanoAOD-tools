@@ -37,7 +37,9 @@ from TopPtWeightProducer import TopPtWeightProducer
 
 #event hypothesis
 from WbosonReconstruction import WbosonReconstruction
-from TopReconstruction import TopReconstruction
+from SingleTopReconstruction import SingleTopReconstruction
+from TTbarReconstruction import TTbarReconstruction
+from TTbarReconstructionTemplate import TTbarReconstructionTemplate
 from XGBEvaluation import XGBEvaluation
 from ParticleLevel import ParticleLevel
 from PartonLevel import PartonLevel

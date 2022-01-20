@@ -42,15 +42,18 @@ The script accepts the following arguments:
 
 ## Analysis modules
 
-The analysis-specific modules can be found under `PhysicsTools/NanoAODTools/python/modules`.
+The analysis-specific modules can be found under [python/modules](https://github.com/WbWbX/nanoAOD-tools/tree/wbwbxUL/python/modules).
 In general, the input and output collections of modules should be configurable so that they can be easily reused, i.e. for evaluating systematics. A few important ones are
 * MuonSelection/MuonVeto: modules to select tight isolated muon candidates and veto additional loose muons (similar modules exists for electrons). For MC, the module also produces weights to evaluate the uncertainties on the lepton selection and reconstruction efficiencies.
 * JetMetUncertinties: module to evalutate JEC/JER/MET uncertainties. Separate collections of objects are created for each variation.
 * JetSelection: module to select jets within acceptance
 * ChargeTagging: evaluates the b jet charge tagger and attaches the result to the jet object
 
+## BDT training
 
-# Analysis workflow by Marco
+The following simple script is provided under [scripts/trainBDT.py](https://github.com/WbWbX/nanoAOD-tools/blob/wbwbxUL/scripts/trainBDT.py).
+
+# Legacy analysis workflow by Marco
 
 Run steps with `python processors/WbWbX.py --input <path to .root file> --step X` with `X=1, 2 or 3`!
 See `python processors/WbWbX.py -h` for more options.

@@ -11,6 +11,7 @@ import imp
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
+from utils import deltaPhi
 
 class ChargeTagging(Module):
 
@@ -19,6 +20,7 @@ class ChargeTagging(Module):
         modelPath,
         featureDictFile,
         inputCollections = [lambda event: Collection(event, "Jet")],
+        filterJets = lambda jet: True,
         taggerName = "nn",
     ):
         self.modelPath = os.path.expandvars(modelPath)
@@ -33,6 +35,7 @@ class ChargeTagging(Module):
         self.featureDict = feature_dict_module.featureDict
         self.predictionLabels = feature_dict_module.predictionLabels
         
+        self.filterJets = filterJets
         self.taggerName = taggerName
 
     def beginJob(self):
@@ -44,12 +47,6 @@ class ChargeTagging(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
         self.setup(inputTree)
-
-        self.out.branch('n'+self.taggerName,"I")
-        self.out.branch(self.taggerName+"_Bm","F",lenVar="n"+self.taggerName)
-        self.out.branch(self.taggerName+"_B0bar","F",lenVar="n"+self.taggerName)
-        self.out.branch(self.taggerName+"_B0","F",lenVar="n"+self.taggerName)
-        self.out.branch(self.taggerName+"_Bp","F",lenVar="n"+self.taggerName)
 
     def setupTFEval(self,tree,modelFile):
         print "Building TFEval object"
@@ -105,16 +102,18 @@ class ChargeTagging(Module):
         for jetCollection in self.inputCollections:
             jets = jetCollection(event)
             for ijet, jet in enumerate(jets):
+                if not self.filterJets(jet):
+                    continue    
                 try:
                     global_jet_index = jetglobal_indices.index(jet._index)
                 except ValueError:
-                    print "WARNING: jet (pt: %s, eta: %s) does not have a matching global jet --> tagger cannot be evaluated!" % (jet.pt, jet.eta)
+                    print "ChargeTagging: WARNING: jet (pt: %s, eta: %s) does not have a matching global jet --> tagger cannot be evaluated!" % (jet.pt, jet.eta)
                     continue
                 else:
                     global_jet = jetglobal[global_jet_index]
-                    if abs(jet.eta - global_jet.eta) > 0.01 or \
-                       abs(jet.phi - global_jet.phi) > 0.01:
-                           print "Warning ->> jet might be mismatched!"
+                    if math.fabs(jet.eta - global_jet.eta) > 0.01 or \
+                       math.fabs(deltaPhi(jet.phi,global_jet.phi)) > 0.01:
+                           print "ChargeTagging: Warning ->> jet might be mismatched!"
                     jetOriginIndices.add(global_jet_index)
                     setattr(jet, "globalIdx", global_jet_index)
 
@@ -134,25 +133,17 @@ class ChargeTagging(Module):
             #apply softmax on logit output
             predictionsPerIndex[jetIndex] = np.exp(x)/sum(np.exp(x))
 
-        #NOTE: take just first collection for quick study
-        jets = self.inputCollections[0](event)
-        probBm = [0.]*len(jets)
-        probB0bar = [0.]*len(jets)
-        probB0 = [0.]*len(jets)
-        probBp = [0.]*len(jets)
-        
-        for ijet, jet in enumerate(jets):
-            if hasattr(jet, "globalIdx"):     
-                probBm[ijet] = predictionsPerIndex[jet.globalIdx][0]
-                probB0bar[ijet] = predictionsPerIndex[jet.globalIdx][1]
-                probB0[ijet] = predictionsPerIndex[jet.globalIdx][2]
-                probBp[ijet] = predictionsPerIndex[jet.globalIdx][3]
-        
-        self.out.fillBranch('n'+self.taggerName,len(jets))
-        self.out.fillBranch(self.taggerName+"_Bm",probBm)
-        self.out.fillBranch(self.taggerName+"_B0bar",probB0bar)
-        self.out.fillBranch(self.taggerName+"_B0",probB0)
-        self.out.fillBranch(self.taggerName+"_Bp",probBp)
-        
-        
+        for jetCollection in self.inputCollections:
+            jets = jetCollection(event)
+            for ijet, jet in enumerate(jets):
+                resultDict = {}
+                if hasattr(jet, "globalIdx"):
+                    for ilabel,labelName in enumerate(self.predictionLabels):
+                        resultDict[labelName] = predictionsPerIndex[jet.globalIdx][ilabel]
+                else:
+                    for ilabel,labelName in enumerate(self.predictionLabels):
+                        resultDict[labelName] = -1.
+                setattr(jet,self.taggerName,resultDict)
+
         return True
+        

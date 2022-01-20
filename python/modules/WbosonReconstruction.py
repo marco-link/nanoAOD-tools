@@ -16,12 +16,14 @@ class WbosonReconstruction(Module):
 
         leptonObject = lambda event: Collection(event,"Muon")[0],
         metObject =lambda event: Object(event, "MET"),
-        outputName='nominal',
+        outputName='wboson',
+        systName='nominal',
         debug = False
     ):
         self.leptonObject = leptonObject
         self.metObject = metObject
         self.outputName=outputName
+        self.systName = systName
         self.debug = debug
 
     def beginJob(self):
@@ -35,9 +37,9 @@ class WbosonReconstruction(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
 
-        self.out.branch(self.outputName+"_met", "F")
-        self.out.branch(self.outputName+"_mtw", "F")
-        self.out.branch(self.outputName+"_met_lepton_deltaPhi", "F")
+        self.out.branch("met_"+self.systName, "F")
+        self.out.branch("mtw_"+self.systName, "F")
+        self.out.branch("met_lepton_deltaPhi_"+self.systName, "F")
             
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -54,9 +56,9 @@ class WbosonReconstruction(Module):
         dPhi = deltaPhi(lepton,met)
         mtw = math.sqrt(2*lepton.pt*met.pt*(1-math.cos(dPhi)))
         
-        self.out.fillBranch(self.outputName+"_met", met.pt)
-        self.out.fillBranch(self.outputName+"_mtw", mtw)
-        self.out.fillBranch(self.outputName+"_met_lepton_deltaPhi", dPhi)
+        self.out.fillBranch("met_"+self.systName, met.pt)
+        self.out.fillBranch("mtw_"+self.systName, mtw)
+        self.out.fillBranch("met_lepton_deltaPhi_"+self.systName, dPhi)
    
 
         metP4 = ROOT.TLorentzVector()
@@ -65,15 +67,22 @@ class WbosonReconstruction(Module):
         leptonP4 = lepton.p4()
         
         wbosons = []
+
+        #nuSol = self.recoMetFromWmass(leptonP4,metP4)
         
-        for nuP4 in self.recoMetFromWmass(leptonP4,metP4):
+        nuSol = ROOT.NeutrinoReco.NuMomentum(
+            leptonP4.Px(), leptonP4.Py(), leptonP4.Pz(),
+            leptonP4.P(), metP4.Px(), metP4.Py()
+        )   
+        
+        for nuP4 in nuSol:
             wP4 = nuP4+leptonP4
             wbosons.append(PhysicsObject(None, pt=wP4.Pt(), eta=wP4.Eta(), phi=wP4.Phi(), mass= wP4.M()))
             
         if len(wbosons)==0:
-            print "ERROR - no wbosons"
+            raise Exception("ERROR - no wbosons")
             
-        setattr(event,self.outputName+"_w_candidates",wbosons)
+        setattr(event,self.outputName+"_"+self.systName,wbosons)
             
         return True
 
