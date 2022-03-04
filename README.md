@@ -53,53 +53,6 @@ In general, the input and output collections of modules should be configurable s
 
 The following simple script is provided under [scripts/trainBDT.py](https://github.com/WbWbX/nanoAOD-tools/blob/wbwbxUL/scripts/trainBDT.py).
 
-# Legacy analysis workflow by Marco
-
-Run steps with `python processors/WbWbX.py --input <path to .root file> --step X` with `X=1, 2 or 3`!
-See `python processors/WbWbX.py -h` for more options.
-
-
-## step1
-
-- [x] preskim (background only)
-- [ ] particle selections/filters
-- [ ] additional weights calculation
-- [ ] scale factor calculation
-- [x] Jetcharge from parton flavour
-- [x] Wb generator (signal  only)
-- [x] drop trigger information and more unused variables
-
-
-## step2
-
-- [x] leptonic W reconstruction
-- [x] apply b tagging WP
-- [ ] apply b charge tagger
-- [x] drop special tagger variables
-
-
-## step3
-
-- [x] Event selection
-- [x] Wb reconstruction
-- [x] add smeared truth
-- [x] apply binning for asymmetry
-
-
-## plot (+ unfolding)
-
-
-
-# The Asymmetry binning
-
--`bin > 0` onshell
--`bin < 0` offshell
-
-- `abs(bin)==1` negative charge (bottom quark)
-- `abs(bin)==2` positive charge (anti bottom quark)
-
-- `bin == 0` zero charge
-
 
 ## General information on nanoaod-tools
 
