@@ -2,7 +2,7 @@
 
 [![ST workflow](https://github.com/WbWbX/nanoAOD-tools/actions/workflows/main.yml/badge.svg)](https://github.com/WbWbX/nanoAOD-tools/actions/workflows/main.yml)
 
-Tests (2017 only!) are defined in [test/runCMSSWTest_2017.sh](https://github.com/WbWbX/nanoAOD-tools/blob/WbWbX/test/runCMSSWTest_2017.sh)
+Tests (2017 only!) are defined in [test/runCMSSWTest_2017.sh](https://github.com/WbWbX/nanoAOD-tools/blob/wbwbxUL/test/runCMSSWTest_2017.sh)
 
 ## Checkout instructions: CMSSW_11_1_7
 
