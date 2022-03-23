@@ -15,5 +15,5 @@ jobs:
     - name: Testing ST workflow
       run: |
         docker pull clelange/cc7-cmssw-cvmfs
-        docker run --rm --privileged -v $PWD:/scripts:ro --device /dev/fuse clelange/cc7-cmssw-cvmfs /bin/bash -c /scripts/test/runCMSSWTest.sh
+        docker run --rm --privileged -v $PWD:/scripts:ro --device /dev/fuse clelange/cc7-cmssw-cvmfs /bin/bash -c /scripts/test/runCMSSWTest_2017.sh
   
