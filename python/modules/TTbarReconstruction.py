@@ -6,6 +6,7 @@ import ROOT
 import random
 import itertools
 import numpy as np
+import feature_dict_module
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
@@ -25,6 +26,8 @@ class TTbarReconstruction(Module):
          wbosonCollection=lambda event: [],
          metObject=lambda event: Object("MET"),
          templateFile="",
+         taggerName = 'nn',
+         notagger = False,
          outputName="ttbar",
          systName="nominal",
      ):
@@ -37,6 +40,8 @@ class TTbarReconstruction(Module):
         self.templateFile = os.path.expandvars(templateFile)
         self.outputName = outputName
         self.systName = systName
+        self.taggerName = taggerName
+        self.notagger = notagger
         
         rootFile = ROOT.TFile(self.templateFile)
         if not rootFile:
@@ -86,7 +91,21 @@ class TTbarReconstruction(Module):
         self.out.branch(self.outputName+"_mass_"+self.systName,"F")
         self.out.branch(self.outputName+"_logProb_"+self.systName,"F")
         
-        #TODO: add more info on bjet for calibration (e.g. tagger output, truth label, etc)
+        if not self.notagger:
+            for label in feature_dict_module.predictionLabels:
+                self.out.branch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
+                self.out.branch(self.outputName+"_bjetHadronic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
+                self.out.branch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,"F")
+                self.out.branch(self.outputName+"_ljetFromW_2_"+self.taggerName+"_"+label+"_"+self.systName,"F")
+
+        self.out.branch(self.outputName+"_bjetLeptonic_hadronFlavour_"+self.systName,"F")
+        self.out.branch(self.outputName+"_bjetLeptonic_partonFlavour_"+self.systName,"F")
+        self.out.branch(self.outputName+"_bjetHadronic_hadronFlavour_"+self.systName,"F")
+        self.out.branch(self.outputName+"_bjetHadronic_partonFlavour_"+self.systName,"F")
+        self.out.branch(self.outputName+"_ljetFromW_1_hadronFlavour_"+self.systName,"F")
+        self.out.branch(self.outputName+"_ljetFromW_1_partonFlavour_"+self.systName,"F")
+        self.out.branch(self.outputName+"_ljetFromW_2_hadronFlavour_"+self.systName,"F")
+        self.out.branch(self.outputName+"_ljetFromW_2_partonFlavour_"+self.systName,"F")
         
         
     def getLeptonicLogProbability(self,mLeptonicTop):
@@ -180,6 +199,8 @@ class TTbarReconstruction(Module):
                         "wbosonFromHadronicTopP4": wbosonFromHadronicTopP4,
                         "bFromLeptonicTop": bFromLeptonicTop,
                         "bFromHadronicTop": bFromHadronicTop,
+                        "ljetFromW_1": ljetCombination[0],
+                        "ljetFromW_2": ljetCombination[1],
                     })
         permutations = sorted(permutations,key=lambda x: x['logProb'], reverse=True)
         bestPermutation = permutations[0]
@@ -202,6 +223,22 @@ class TTbarReconstruction(Module):
         
         self.out.fillBranch(self.outputName+"_bjetLeptonic_pt_"+self.systName,bestPermutation["bFromLeptonicTop"].pt)
         self.out.fillBranch(self.outputName+"_bjetLeptonic_eta_"+self.systName,bestPermutation["bFromLeptonicTop"].eta)
+
+        if not self.notagger:
+            for label in feature_dict_module.predictionLabels:
+                self.out.fillBranch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],self.taggerName)[label])
+                self.out.fillBranch(self.outputName+"_bjetHadronic_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],self.taggerName)[label])
+                self.out.fillBranch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["ljetFromW_1"],self.taggerName)[label])
+                self.out.fillBranch(self.outputName+"_ljetFromW_2_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["ljetFromW_2"],self.taggerName)[label])
+
+        self.out.fillBranch(self.outputName+"_bjetLeptonic_hadronFlavour_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],"hadronFlavour"))
+        self.out.fillBranch(self.outputName+"_bjetLeptonic_partonFlavour_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],"partonFlavour"))
+        self.out.fillBranch(self.outputName+"_bjetHadronic_hadronFlavour_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],"hadronFlavour"))
+        self.out.fillBranch(self.outputName+"_bjetHadronic_partonFlavour_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],"partonFlavour"))
+        self.out.fillBranch(self.outputName+"_ljetFromW_1_hadronFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_1"],"hadronFlavour"))
+        self.out.fillBranch(self.outputName+"_ljetFromW_1_partonFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_1"],"partonFlavour"))
+        self.out.fillBranch(self.outputName+"_ljetFromW_2_hadronFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_2"],"hadronFlavour"))
+        self.out.fillBranch(self.outputName+"_ljetFromW_2_partonFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_2"],"partonFlavour"))
         
         self.out.fillBranch(self.outputName+"_mass_"+self.systName,(bestPermutation["hadronicTopP4"]+bestPermutation["leptonicTopP4"]).M())
         self.out.fillBranch(self.outputName+"_logProb_"+self.systName,bestPermutation['logProb'])
