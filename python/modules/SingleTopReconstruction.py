@@ -72,6 +72,7 @@ class SingleTopReconstruction(Module):
         if not self.notagger:
             for label in feature_dict_module.predictionLabels:
                 self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
+                self.out.branch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
 
         
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
