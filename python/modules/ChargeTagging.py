@@ -114,8 +114,6 @@ class ChargeTagging(Module):
 
         if event._tree._ttreereaderversion > self._ttreereaderversion:
             self.setup(event._tree)
-        if len(jetOriginIndices)==0:
-            return True
         jetOriginIndices = list(jetOriginIndices)
         result = self.tfEvalParametric.evaluate(
             len(jetOriginIndices),
