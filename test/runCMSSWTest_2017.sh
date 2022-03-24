@@ -15,15 +15,12 @@ function run_test()
     scram b || return 1
     
     echo
-    echo "==================== 2017 (ntags=-1) ====================="
+    echo "==================== signal 2017 ====================="
     python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isSignal --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_WbjToLNu.root . || return 1
     echo
-    echo "==================== 2017 (ntags=1) ====================="
-    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags 1 --isSignal --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_WbjToLNu.root . || return 1
-    echo
-    echo "==================== 2017 (ntags=2) ====================="
-    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags 2 --isSignal --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_WbjToLNu.root . || return 1
-    
+    echo "==================== semileptonic ttbar 2017 ====================="
+    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_TTToSemiLeptonic.root . || return 1
+
    
     echo "==================== done ====================="
 }
