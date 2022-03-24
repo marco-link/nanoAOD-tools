@@ -40,7 +40,7 @@ class BTagSelection(Module):
         
         #DONE - but also available in files
         wpValues = {
-            '2016preVFP': [0.0614, 0.3093, 0.7221], #https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation2016Legacy
+            '2016preVFP': [0.0508, 0.2598, 0.6502], #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL16preVFP
             '2016': [0.0480, 0.2489, 0.6377], #https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation106XUL16postVFP
             '2017': [0.0532, 0.3040, 0.7476], #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL17
             '2018': [0.0490, 0.2783, 0.7100] #https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL18

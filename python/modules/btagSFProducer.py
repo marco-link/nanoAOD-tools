@@ -46,8 +46,8 @@ class btagSFProducer(Module):
         self.jesSystsForShape = jesSystsForShape
         self.nosyst = nosyst
         # CV: Return value of BTagCalibrationReader::eval_auto_bounds() is zero
-        # in case jet abs(eta) > 2.4 !!
-        self.max_abs_eta = 2.4
+        # in case jet abs(eta) > 2.5 !!
+        self.max_abs_eta = 2.5
         # define measurement type for each flavor
         self.inputFilePath = os.environ['CMSSW_BASE'] + \
             "/src/PhysicsTools/NanoAODTools/data/btagSF/"
@@ -57,7 +57,7 @@ class btagSFProducer(Module):
         supported_btagSF = {
             'deepjet': {
                 '2016preVFP': {
-                    'inputFileName': "DeepJet_2016LegacySF_V1_TuneCP5_JESreduced.csv",
+                    'inputFileName': "reshaping_deepJet_106XUL16preVFP_v2_conv.csv",
                     'measurement_types': {
                         0: "comb",  # b
                         1: "comb",  # c
@@ -67,7 +67,7 @@ class btagSFProducer(Module):
                 },
                 # update file name once available!
                 '2016': {
-                    'inputFileName': "DeepJet_2016LegacySF_V1_TuneCP5_JESreduced.csv",
+                    'inputFileName': "reshaping_deepJet_106XUL16postVFP_v3_conv.csv",
                     'measurement_types': {
                         0: "comb",  # b
                         1: "comb",  # c
@@ -76,7 +76,7 @@ class btagSFProducer(Module):
                     'supported_wp': ["L", "M", "T", "shape_corr"]
                 },
                 '2017': {
-                    'inputFileName': "DeepJet_106XUL17SF_V2p1.csv",
+                    'inputFileName': "reshaping_deepJet_106XUL17_v3_conv.csv",
                     'measurement_types': {
                         0: "comb",  # b
                         1: "comb",  # c
@@ -85,7 +85,7 @@ class btagSFProducer(Module):
                     'supported_wp': ["L", "M", "T", "shape_corr"]
                 },
                 '2018': {
-                    'inputFileName': "DeepJet_106XUL18SF_V1p1.csv",
+                    'inputFileName': "reshaping_deepJet_106XUL18_v2_conv.csv",
                     'measurement_types': {
                         0: "comb",  # b
                         1: "comb",  # c
