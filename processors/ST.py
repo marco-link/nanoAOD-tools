@@ -243,18 +243,17 @@ def eventReconstruction(uncertaintyDict):
             outputName='wbosons',
             systName=systName
         ))
-        if args.ntags<0 or args.ntags>=1:
-            seq.append(SingleTopReconstruction(
-                bJetCollection=lambda event: filter(lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,jetCollection(event)),
-                lJetCollection=lambda event: filter(lambda jet: not jet.isBTagged,jetCollection(event)),
-                leptonObject=lambda event: (event.tightMuons+event.tightElectrons)[0],
-                wbosonCollection=lambda event,sys=systName: getattr(event,"wbosons_"+sys),
-                metObject = metObject,
-                taggerName = taggerName,
-                notagger = args.notagger,
-                outputName="top",
-                systName=systName,
-            ))
+        seq.append(SingleTopReconstruction(
+            bJetCollection=lambda event: filter(lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,jetCollection(event)),
+            lJetCollection=lambda event: filter(lambda jet: not jet.isBTagged,jetCollection(event)),
+            leptonObject=lambda event: (event.tightMuons+event.tightElectrons)[0],
+            wbosonCollection=lambda event,sys=systName: getattr(event,"wbosons_"+sys),
+            metObject = metObject,
+            taggerName = taggerName,
+            notagger = args.notagger,
+            outputName="top",
+            systName=systName,
+        ))
         if args.ntags<0 or args.ntags>=2:
             seq.append(TTbarReconstruction(
                 bJetCollection=lambda event: filter(lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,jetCollection(event)),
