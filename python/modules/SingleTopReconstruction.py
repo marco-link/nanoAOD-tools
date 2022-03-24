@@ -72,7 +72,6 @@ class SingleTopReconstruction(Module):
         if not self.notagger:
             for label in feature_dict_module.predictionLabels:
                 self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
-                self.out.branch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
 
         
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -86,7 +85,7 @@ class SingleTopReconstruction(Module):
         wbosons = self.wbosonCollection(event)
         met = self.metObject(event)
         
-        if len(ljets+bjets)<2 or len(wbosons)==0:
+        if len(ljets)<1 or len(bjets)<1 or len(wbosons)==0:
             self.out.fillBranch(self.outputName+"_mass_"+self.systName, -1)
             self.out.fillBranch(self.outputName+"_pt_"+self.systName, -1)
             self.out.fillBranch(self.outputName+"_eta_"+self.systName, 0)
@@ -102,18 +101,18 @@ class SingleTopReconstruction(Module):
         sortedLjets = sorted(ljets,key=lambda x: math.fabs(x.eta), reverse=True) #sort forward
         sortedBjets = sorted(bjets,key=lambda x: x.pt, reverse=True) #sort pT
         
-        if len(sortedLjets)>=1 and len(sortedBjets)>=1:
-            #default in signal region
-            ljet = sortedLjets[0] #most forward
-            bjet = sortedBjets[0] #highest pt
-        elif len(sortedLjets)>=2 and len(sortedBjets)==0:
-            #control 0b regions
-            ljet = sortedLjets[0] #most forward
-            bjet = sortedLjets[-1] #most central
-        elif len(sortedLjets)==0 and len(sortedBjets)>=2:
-            #control 0l regions
-            ljet = sortedBjets[1] #subleading pT
-            bjet = sortedBjets[0] #leading pT
+        # if len(sortedLjets)>=1 and len(sortedBjets)>=1:
+        #default in signal region
+        ljet = sortedLjets[0] #most forward
+        bjet = sortedBjets[0] #highest pt
+        # elif len(sortedLjets)>=2 and len(sortedBjets)==0:
+        #     #control 0b regions
+        #     ljet = sortedLjets[0] #most forward
+        #     bjet = sortedLjets[-1] #most central
+        # elif len(sortedLjets)==0 and len(sortedBjets)>=2:
+        #     #control 0l regions
+        #     ljet = sortedBjets[1] #subleading pT
+        #     bjet = sortedBjets[0] #leading pT
         
         #TODO: move to dedicated module?
         '''
@@ -173,11 +172,11 @@ class SingleTopReconstruction(Module):
         self.out.fillBranch(self.outputName+"_ljet_eta"+self.systName, ljet.eta)
         self.out.fillBranch(self.outputName+"_ljet_hadronFlavour"+self.systName, getattr(ljet,"hadronFlavour"))
         self.out.fillBranch(self.outputName+"_ljet_partonFlavour"+self.systName, getattr(ljet,"partonFlavour"))
-        
+
         if not self.notagger:
             for label in feature_dict_module.predictionLabels:
                 self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bjet,self.taggerName)[label])
-                self.out.fillBranch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(ljet,self.taggerName)[label])
+
 
         
         return True

@@ -104,7 +104,7 @@ def leptonSequence():
         MuonSelection(
             inputCollection=lambda event: Collection(event, "Muon"),
             outputName="tightMuons",
-            storeKinematics=[],
+            storeKinematics=['pt','eta','charge'],
             storeWeights=True,
             muonMinPt=minMuonPt[args.year],
             muonMaxEta=2.4,
@@ -131,7 +131,7 @@ def leptonSequence():
             electronID = ElectronSelection.INV if args.invid else ElectronSelection.WP90,
             electronMinPt = minElectronPt[args.year],
             electronMaxEta = 2.4,
-            storeKinematics=[],
+            storeKinematics=['pt','eta','charge'],
             storeWeights=True,
         ),
         SingleElectronTriggerSelection(
@@ -184,6 +184,7 @@ def jetSelection(jetDict):
         )
 
     systNames = jetDict.keys()
+
     seq.append(
         EventSkim(selection=lambda event, systNames=systNames: 
             any([getattr(event, "nselectedJets_"+systName) >= 2 for systName in systNames])
@@ -244,7 +245,7 @@ def eventReconstruction(uncertaintyDict):
         ))
 
         seq.append(SingleTopReconstruction(
-            bJetCollection=lambda event: filter(lambda jet: jet.isBTagged,jetCollection(event)),
+            bJetCollection=lambda event: filter(lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,jetCollection(event)),
             lJetCollection=lambda event: filter(lambda jet: not jet.isBTagged,jetCollection(event)),
             leptonObject=lambda event: (event.tightMuons+event.tightElectrons)[0],
             wbosonCollection=lambda event,sys=systName: getattr(event,"wbosons_"+sys),
@@ -256,7 +257,7 @@ def eventReconstruction(uncertaintyDict):
         ))
         if args.ntags<0 or args.ntags>=2:
             seq.append(TTbarReconstruction(
-                bJetCollection=lambda event: filter(lambda jet: jet.isBTagged,jetCollection(event)),
+                bJetCollection=lambda event: filter(lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,jetCollection(event)),
                 lJetCollection=lambda event: filter(lambda jet: not jet.isBTagged,jetCollection(event)),
                 leptonObject=lambda event: (event.tightMuons+event.tightElectrons)[0],
                 wbosonCollection=lambda event,sys=systName: getattr(event,"wbosons_"+sys),
@@ -372,7 +373,7 @@ if args.isSignal:
         PartonLevel()
     )
 
-if not args.isData:
+if not args.isData and not args.nosys:
     analyzerChain.append(
         GenWeightProducer(
             isSignal = args.isSignal
