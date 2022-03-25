@@ -258,6 +258,7 @@ def eventReconstruction(uncertaintyDict):
             metObject = metObject,
             taggerName = taggerName,
             notagger = args.notagger,
+            isMC = isMC,
             outputName="top",
             systName=systName,
         ))
@@ -271,6 +272,7 @@ def eventReconstruction(uncertaintyDict):
                 templateFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/ttbar/ttbarTemplates.root",
                 taggerName = taggerName,
                 notagger = args.notagger,
+                isMC = isMC,
                 outputName="ttbar",
                 systName=systName,
             ))

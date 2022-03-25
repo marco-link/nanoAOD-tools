@@ -28,6 +28,7 @@ class TTbarReconstruction(Module):
          templateFile="",
          taggerName = 'nn',
          notagger = False,
+         isMC = True,
          outputName="ttbar",
          systName="nominal",
      ):
@@ -42,7 +43,8 @@ class TTbarReconstruction(Module):
         self.systName = systName
         self.taggerName = taggerName
         self.notagger = notagger
-        
+        self.isMC = isMC
+
         rootFile = ROOT.TFile(self.templateFile)
         if not rootFile:
             raise Exception("Error loading template file '%s'"%self.templateFile)
@@ -98,14 +100,15 @@ class TTbarReconstruction(Module):
                 self.out.branch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,"F")
                 self.out.branch(self.outputName+"_ljetFromW_2_"+self.taggerName+"_"+label+"_"+self.systName,"F")
 
-        self.out.branch(self.outputName+"_bjetLeptonic_hadronFlavour_"+self.systName,"F")
-        self.out.branch(self.outputName+"_bjetLeptonic_partonFlavour_"+self.systName,"F")
-        self.out.branch(self.outputName+"_bjetHadronic_hadronFlavour_"+self.systName,"F")
-        self.out.branch(self.outputName+"_bjetHadronic_partonFlavour_"+self.systName,"F")
-        self.out.branch(self.outputName+"_ljetFromW_1_hadronFlavour_"+self.systName,"F")
-        self.out.branch(self.outputName+"_ljetFromW_1_partonFlavour_"+self.systName,"F")
-        self.out.branch(self.outputName+"_ljetFromW_2_hadronFlavour_"+self.systName,"F")
-        self.out.branch(self.outputName+"_ljetFromW_2_partonFlavour_"+self.systName,"F")
+        if self.isMC:
+            self.out.branch(self.outputName+"_bjetLeptonic_hadronFlavour_"+self.systName,"F")
+            self.out.branch(self.outputName+"_bjetLeptonic_partonFlavour_"+self.systName,"F")
+            self.out.branch(self.outputName+"_bjetHadronic_hadronFlavour_"+self.systName,"F")
+            self.out.branch(self.outputName+"_bjetHadronic_partonFlavour_"+self.systName,"F")
+            self.out.branch(self.outputName+"_ljetFromW_1_hadronFlavour_"+self.systName,"F")
+            self.out.branch(self.outputName+"_ljetFromW_1_partonFlavour_"+self.systName,"F")
+            self.out.branch(self.outputName+"_ljetFromW_2_hadronFlavour_"+self.systName,"F")
+            self.out.branch(self.outputName+"_ljetFromW_2_partonFlavour_"+self.systName,"F")
         
         
     def getLeptonicLogProbability(self,mLeptonicTop):
@@ -231,14 +234,15 @@ class TTbarReconstruction(Module):
                 self.out.fillBranch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["ljetFromW_1"],self.taggerName)[label])
                 self.out.fillBranch(self.outputName+"_ljetFromW_2_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["ljetFromW_2"],self.taggerName)[label])
 
-        self.out.fillBranch(self.outputName+"_bjetLeptonic_hadronFlavour_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],"hadronFlavour"))
-        self.out.fillBranch(self.outputName+"_bjetLeptonic_partonFlavour_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],"partonFlavour"))
-        self.out.fillBranch(self.outputName+"_bjetHadronic_hadronFlavour_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],"hadronFlavour"))
-        self.out.fillBranch(self.outputName+"_bjetHadronic_partonFlavour_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],"partonFlavour"))
-        self.out.fillBranch(self.outputName+"_ljetFromW_1_hadronFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_1"],"hadronFlavour"))
-        self.out.fillBranch(self.outputName+"_ljetFromW_1_partonFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_1"],"partonFlavour"))
-        self.out.fillBranch(self.outputName+"_ljetFromW_2_hadronFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_2"],"hadronFlavour"))
-        self.out.fillBranch(self.outputName+"_ljetFromW_2_partonFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_2"],"partonFlavour"))
+        if self.isMC:
+            self.out.fillBranch(self.outputName+"_bjetLeptonic_hadronFlavour_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],"hadronFlavour"))
+            self.out.fillBranch(self.outputName+"_bjetLeptonic_partonFlavour_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],"partonFlavour"))
+            self.out.fillBranch(self.outputName+"_bjetHadronic_hadronFlavour_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],"hadronFlavour"))
+            self.out.fillBranch(self.outputName+"_bjetHadronic_partonFlavour_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],"partonFlavour"))
+            self.out.fillBranch(self.outputName+"_ljetFromW_1_hadronFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_1"],"hadronFlavour"))
+            self.out.fillBranch(self.outputName+"_ljetFromW_1_partonFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_1"],"partonFlavour"))
+            self.out.fillBranch(self.outputName+"_ljetFromW_2_hadronFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_2"],"hadronFlavour"))
+            self.out.fillBranch(self.outputName+"_ljetFromW_2_partonFlavour_"+self.systName,getattr(bestPermutation["ljetFromW_2"],"partonFlavour"))
         
         self.out.fillBranch(self.outputName+"_mass_"+self.systName,(bestPermutation["hadronicTopP4"]+bestPermutation["leptonicTopP4"]).M())
         self.out.fillBranch(self.outputName+"_logProb_"+self.systName,bestPermutation['logProb'])
