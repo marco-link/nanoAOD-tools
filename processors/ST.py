@@ -5,6 +5,7 @@ import argparse
 import random
 import ROOT
 import numpy as np
+import imp
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor \
     import PostProcessor
@@ -12,6 +13,14 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel \
     import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.framework.crabhelper import inputFiles
+
+# this module must be defined before importing others
+taggerName = "bChargeTag"
+feature_dict_module = imp.load_source(
+    'feature_dict_module',
+    os.path.expandvars("${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py")
+)
+
 from PhysicsTools.NanoAODTools.modules import *
 
 parser = argparse.ArgumentParser()
@@ -66,10 +75,16 @@ Module.globalOptions = globalOptions
 isMC = not args.isData
 isPowheg = 'powheg' in inputfiles[0].lower()
 isPowhegTTbar = 'TTTo' in inputfiles[0] and isPowheg
+isST = 'ST_' in inputFiles[0]
+isWjets = 'WJetsToLNu_' in inputFiles[0]
+saveGenWeights = args.isSignal or isPowhegTTbar or isST or isWjets
+
+nPDF_weights = 103
+if args.isSignal or (isST and not 'ST_t-channel_' in inputFiles[0]):
+    nPDF_weights = 101
 
 minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
 minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
-
 
 met_variable = {
     '2016': lambda event: Object(event, "MET"),
@@ -103,7 +118,7 @@ def leptonSequence():
         MuonSelection(
             inputCollection=lambda event: Collection(event, "Muon"),
             outputName="tightMuons",
-            storeKinematics=[],
+            storeKinematics=['pt','eta','charge'],
             storeWeights=True,
             muonMinPt=minMuonPt[args.year],
             muonMaxEta=2.4,
@@ -130,7 +145,7 @@ def leptonSequence():
             electronID = ElectronSelection.INV if args.invid else ElectronSelection.WP90,
             electronMinPt = minElectronPt[args.year],
             electronMaxEta = 2.4,
-            storeKinematics=[],
+            storeKinematics=['pt','eta','charge'],
             storeWeights=True,
         ),
         SingleElectronTriggerSelection(
@@ -183,6 +198,7 @@ def jetSelection(jetDict):
         )
 
     systNames = jetDict.keys()
+
     seq.append(
         EventSkim(selection=lambda event, systNames=systNames: 
             any([getattr(event, "nselectedJets_"+systName) >= 2 for systName in systNames])
@@ -199,10 +215,9 @@ def jetSelection(jetDict):
         seq.append(
             ChargeTagging(
                 modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
-                featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
                 inputCollections = selectedJetCollections,
                 filterJets = lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,
-                taggerName = "bChargeTag",
+                taggerName = taggerName,
             )
         )
     
@@ -242,24 +257,27 @@ def eventReconstruction(uncertaintyDict):
             outputName='wbosons',
             systName=systName
         ))
-
         seq.append(SingleTopReconstruction(
-            bJetCollection=lambda event: filter(lambda jet: jet.isBTagged,jetCollection(event)),
+            bJetCollection=lambda event: filter(lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,jetCollection(event)),
             lJetCollection=lambda event: filter(lambda jet: not jet.isBTagged,jetCollection(event)),
             leptonObject=lambda event: (event.tightMuons+event.tightElectrons)[0],
             wbosonCollection=lambda event,sys=systName: getattr(event,"wbosons_"+sys),
             metObject = metObject,
+            taggerName = taggerName,
+            notagger = args.notagger,
             outputName="top",
             systName=systName,
         ))
         if args.ntags<0 or args.ntags>=2:
             seq.append(TTbarReconstruction(
-                bJetCollection=lambda event: filter(lambda jet: jet.isBTagged,jetCollection(event)),
+                bJetCollection=lambda event: filter(lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,jetCollection(event)),
                 lJetCollection=lambda event: filter(lambda jet: not jet.isBTagged,jetCollection(event)),
                 leptonObject=lambda event: (event.tightMuons+event.tightElectrons)[0],
                 wbosonCollection=lambda event,sys=systName: getattr(event,"wbosons_"+sys),
                 metObject = metObject,
                 templateFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/ttbar/ttbarTemplates.root",
+                taggerName = taggerName,
+                notagger = args.notagger,
                 outputName="ttbar",
                 systName=systName,
             ))
@@ -368,12 +386,13 @@ if args.isSignal:
         PartonLevel()
     )
 
-if not args.isData:
-    analyzerChain.append(
-        GenWeightProducer(
-            isSignal = args.isSignal
+if not args.isData and not args.nosys:
+    if saveGenWeights:
+        analyzerChain.append(
+            GenWeightProducer(
+                nPDFs = nPDF_weights,
+            )
         )
-    )
     if isPowhegTTbar:
         analyzerChain.append(
             TopPtWeightProducer(
