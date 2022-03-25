@@ -48,9 +48,9 @@ parser.add_argument('--crab', dest='crab', action='store_true', default=False)
 args = parser.parse_args()
 print(args)
 
-inputfiles = args.inputFiles
+inputFiles = args.inputFiles
 if args.crab:
-    inputfiles = inputFiles()
+    inputFiles = inputFiles()
 
 print "isData:",args.isData
 print "isSignal:",args.isSignal
@@ -58,7 +58,7 @@ print "ntags:",args.ntags
 print "evaluate systematics:",not args.nosys
 print "evaluate tagger:",not args.notagger
 print "invert lepton id/iso:",args.invid
-print "inputs:",len(inputfiles)
+print "inputs:",len(inputFiles)
 print "year:", args.year
 print "output directory:", args.output
 if args.maxEvents:
@@ -73,8 +73,8 @@ globalOptions = {
 Module.globalOptions = globalOptions
 
 isMC = not args.isData
-isPowheg = 'powheg' in inputfiles[0].lower()
-isPowhegTTbar = 'TTTo' in inputfiles[0] and isPowheg
+isPowheg = 'powheg' in inputFiles[0].lower()
+isPowhegTTbar = 'TTTo' in inputFiles[0] and isPowheg
 isST = 'ST_' in inputFiles[0]
 isWjets = 'WJetsToLNu_' in inputFiles[0]
 saveGenWeights = args.isSignal or isPowhegTTbar or isST or isWjets
@@ -440,7 +440,7 @@ if not globalOptions["isData"]:
 
 p = PostProcessor(
     args.output,
-    inputfiles,
+    inputFiles,
     cut="(nJet>1)&&((nElectron+nMuon)>0)",
     modules=analyzerChain,
     friend=False,
