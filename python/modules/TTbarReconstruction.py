@@ -6,7 +6,6 @@ import ROOT
 import random
 import itertools
 import numpy as np
-import feature_dict_module
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
@@ -26,8 +25,7 @@ class TTbarReconstruction(Module):
          wbosonCollection=lambda event: [],
          metObject=lambda event: Object("MET"),
          templateFile="",
-         taggerName = 'nn',
-         notagger = False,
+         taggerName = None,
          isMC = True,
          outputName="ttbar",
          systName="nominal",
@@ -42,7 +40,6 @@ class TTbarReconstruction(Module):
         self.outputName = outputName
         self.systName = systName
         self.taggerName = taggerName
-        self.notagger = notagger
         self.isMC = isMC
 
         rootFile = ROOT.TFile(self.templateFile)
@@ -93,8 +90,8 @@ class TTbarReconstruction(Module):
         self.out.branch(self.outputName+"_mass_"+self.systName,"F")
         self.out.branch(self.outputName+"_logProb_"+self.systName,"F")
         
-        if not self.notagger:
-            for label in feature_dict_module.predictionLabels:
+        if not self.taggerName is None:
+            for label in Module.taggerLabels[taggerName]:
                 self.out.branch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
                 self.out.branch(self.outputName+"_bjetHadronic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
                 self.out.branch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,"F")
@@ -227,8 +224,8 @@ class TTbarReconstruction(Module):
         self.out.fillBranch(self.outputName+"_bjetLeptonic_pt_"+self.systName,bestPermutation["bFromLeptonicTop"].pt)
         self.out.fillBranch(self.outputName+"_bjetLeptonic_eta_"+self.systName,bestPermutation["bFromLeptonicTop"].eta)
 
-        if not self.notagger:
-            for label in feature_dict_module.predictionLabels:
+        if not self.taggerName is None:
+            for label in Module.taggerLabels[taggerName]:
                 self.out.fillBranch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],self.taggerName)[label])
                 self.out.fillBranch(self.outputName+"_bjetHadronic_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],self.taggerName)[label])
                 self.out.fillBranch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["ljetFromW_1"],self.taggerName)[label])

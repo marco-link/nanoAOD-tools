@@ -5,7 +5,6 @@ import json
 import ROOT
 import random
 import numpy as np
-import feature_dict_module
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
@@ -23,8 +22,7 @@ class SingleTopReconstruction(Module):
          leptonObject=lambda event: Collection(event, "Muon")[0],
          wbosonCollection=lambda event: [],
          metObject=lambda event: Object("MET"),
-         taggerName = 'nn',
-         notagger = False,
+         taggerName = None,
          isMC = True,
          outputName="top",
          systName = "nominal",
@@ -38,7 +36,6 @@ class SingleTopReconstruction(Module):
         self.outputName = outputName
         self.systName = systName
         self.taggerName = taggerName
-        self.notagger = notagger
         self.isMC = isMC
 
     def beginJob(self):
@@ -71,8 +68,8 @@ class SingleTopReconstruction(Module):
             self.out.branch(self.outputName+"_ljet_hadronFlavour_"+self.systName,"F")
             self.out.branch(self.outputName+"_ljet_partonFlavour_"+self.systName,"F")
         
-        if not self.notagger:
-            for label in feature_dict_module.predictionLabels:
+        if not self.taggerName is None:
+            for label in Module.taggerLabels[taggerName]:
                 self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
                 self.out.branch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
 
@@ -177,8 +174,8 @@ class SingleTopReconstruction(Module):
             self.out.fillBranch(self.outputName+"_ljet_hadronFlavour_"+self.systName, getattr(ljet,"hadronFlavour"))
             self.out.fillBranch(self.outputName+"_ljet_partonFlavour_"+self.systName, getattr(ljet,"partonFlavour"))
 
-        if not self.notagger:
-            for label in feature_dict_module.predictionLabels:
+        if not self.taggerName is None:
+            for label in Module.taggerLabels[taggerName]:
                 self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bjet,self.taggerName)[label])
                 self.out.fillBranch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(ljet,self.taggerName)[label])
 

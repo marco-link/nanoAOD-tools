@@ -13,18 +13,9 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel \
     import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.framework.crabhelper import inputFiles
-
-# this module must be defined before importing others
-taggerName = "bChargeTag"
-feature_dict_module = imp.load_source(
-    'feature_dict_module',
-    os.path.expandvars("${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py")
-)
-
 from PhysicsTools.NanoAODTools.modules import *
 
 parser = argparse.ArgumentParser()
-
 
 parser.add_argument('--isData', dest='isData',
                     action='store_true', default=False)
@@ -63,6 +54,13 @@ print "year:", args.year
 print "output directory:", args.output
 if args.maxEvents:
     print 'max number of events', args.maxEvents
+
+Module.taggerLabels = {}
+
+taggerName = "bChargeTag"
+if args.notagger:
+    taggerName = None
+
 
 globalOptions = {
     "isData": args.isData,
@@ -215,6 +213,7 @@ def jetSelection(jetDict):
         seq.append(
             ChargeTagging(
                 modelPath = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/frozenModel.pb",
+                featureDictFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/nn/featureDict.py",
                 inputCollections = selectedJetCollections,
                 filterJets = lambda jet: jet.pt>20 and math.fabs(jet.eta)<2.4 and jet.isBTagged,
                 taggerName = taggerName,
@@ -264,7 +263,6 @@ def eventReconstruction(uncertaintyDict):
             wbosonCollection=lambda event,sys=systName: getattr(event,"wbosons_"+sys),
             metObject = metObject,
             taggerName = taggerName,
-            notagger = args.notagger,
             isMC = isMC,
             outputName="top",
             systName=systName,
@@ -278,7 +276,6 @@ def eventReconstruction(uncertaintyDict):
                 metObject = metObject,
                 templateFile = "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/ttbar/ttbarTemplates.root",
                 taggerName = taggerName,
-                notagger = args.notagger,
                 isMC = isMC,
                 outputName="ttbar",
                 systName=systName,
