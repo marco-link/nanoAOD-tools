@@ -25,6 +25,7 @@ class SingleTopReconstruction(Module):
          metObject=lambda event: Object("MET"),
          taggerName = 'nn',
          notagger = False,
+         isMC = True,
          outputName="top",
          systName = "nominal",
      ):
@@ -38,7 +39,7 @@ class SingleTopReconstruction(Module):
         self.systName = systName
         self.taggerName = taggerName
         self.notagger = notagger
-
+        self.isMC = isMC
 
     def beginJob(self):
         pass
@@ -61,13 +62,14 @@ class SingleTopReconstruction(Module):
         
         self.out.branch(self.outputName+"_bjet_pt"+self.systName,"F")
         self.out.branch(self.outputName+"_bjet_eta"+self.systName,"F")
-        self.out.branch(self.outputName+"_bjet_hadronFlavour"+self.systName,"F")
-        self.out.branch(self.outputName+"_bjet_partonFlavour"+self.systName,"F")
-
         self.out.branch(self.outputName+"_ljet_pt"+self.systName,"F")
         self.out.branch(self.outputName+"_ljet_eta"+self.systName,"F")
-        self.out.branch(self.outputName+"_ljet_hadronFlavour"+self.systName,"F")
-        self.out.branch(self.outputName+"_ljet_partonFlavour"+self.systName,"F")
+
+        if self.isMC:
+            self.out.branch(self.outputName+"_bjet_hadronFlavour"+self.systName,"F")
+            self.out.branch(self.outputName+"_bjet_partonFlavour"+self.systName,"F")
+            self.out.branch(self.outputName+"_ljet_hadronFlavour"+self.systName,"F")
+            self.out.branch(self.outputName+"_ljet_partonFlavour"+self.systName,"F")
         
         if not self.notagger:
             for label in feature_dict_module.predictionLabels:
@@ -166,13 +168,14 @@ class SingleTopReconstruction(Module):
 
         self.out.fillBranch(self.outputName+"_bjet_pt"+self.systName, bjet.pt)
         self.out.fillBranch(self.outputName+"_bjet_eta"+self.systName, bjet.eta)
-        self.out.fillBranch(self.outputName+"_bjet_hadronFlavour"+self.systName, getattr(bjet,"hadronFlavour"))
-        self.out.fillBranch(self.outputName+"_bjet_partonFlavour"+self.systName, getattr(bjet,"partonFlavour"))
-
         self.out.fillBranch(self.outputName+"_ljet_pt"+self.systName, ljet.pt)
         self.out.fillBranch(self.outputName+"_ljet_eta"+self.systName, ljet.eta)
-        self.out.fillBranch(self.outputName+"_ljet_hadronFlavour"+self.systName, getattr(ljet,"hadronFlavour"))
-        self.out.fillBranch(self.outputName+"_ljet_partonFlavour"+self.systName, getattr(ljet,"partonFlavour"))
+
+        if self.isMC:
+            self.out.fillBranch(self.outputName+"_bjet_hadronFlavour"+self.systName, getattr(bjet,"hadronFlavour"))
+            self.out.fillBranch(self.outputName+"_bjet_partonFlavour"+self.systName, getattr(bjet,"partonFlavour"))
+            self.out.fillBranch(self.outputName+"_ljet_hadronFlavour"+self.systName, getattr(ljet,"hadronFlavour"))
+            self.out.fillBranch(self.outputName+"_ljet_partonFlavour"+self.systName, getattr(ljet,"partonFlavour"))
 
         if not self.notagger:
             for label in feature_dict_module.predictionLabels:
