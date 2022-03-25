@@ -1,0 +1,50 @@
+
+# drop all
+drop *
+
+
+
+# filters
+keep MET_filter
+keep IsoMuTrigger_*
+keep IsoElectronTrigger_*
+
+
+# leptons
+keep ntightMuons
+keep tightMuons_*
+
+keep ntightElectrons
+keep tightElectrons_*
+
+
+# jets
+keep nselectedJets*
+keep selectedJets_*
+
+keep nselectedBJets*
+keep selectedBJets_*
+
+
+# weights
+keep PDFweight_*
+keep LHEWeights_width_*
+keep puWeight*
+keep btagEventWeight_*
+keep genweight
+keep L1PreFiringWeight_*
+keep MEweight_*
+keep PSweight_*
+keep fragEventWeight_*
+
+
+# generator level information
+keep partonLevel_*
+keep particleLevel_*
+
+
+# reconstruction
+keep top_*
+keep met_*
+keep mtw_*
+keep ttbar_*

@@ -1,8 +1,6 @@
 
 import numpy
 
-
-
 def status_flag(p, n):
     '''
     To save space, the status flags for each gen particle are not stored as
@@ -129,11 +127,28 @@ def motherchainContains(gen_particles, p, ids):
         mother = gen_particles[mother.genPartIdxMother]
     return False
 
-class genDummy():
 
-    def __init__(self):
-        self.pt = -10
-        self.eta = -10
-        self.phi = -10
-        self.mass = -10
-        self.pdgId = 0
+class genDummy:
+    pt = -10
+    eta = -10
+    phi = -10
+    mass = -10
+    pdgId = 0
+
+    def Pt(self):
+        return self.pt
+
+    def Eta(self):
+        return self.eta
+
+    def Phi(self):
+        return self.phi
+
+    def M(self):
+        return self.mass
+
+    def DeltaPhi(self, x):
+        return 0
+
+    def DeltaR(self, x):
+        return -10
