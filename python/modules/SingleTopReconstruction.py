@@ -69,7 +69,7 @@ class SingleTopReconstruction(Module):
             self.out.branch(self.outputName+"_ljet_partonFlavour_"+self.systName,"F")
         
         if not self.taggerName is None:
-            for label in Module.taggerLabels[taggerName]:
+            for label in Module.taggerLabels[self.taggerName]:
                 self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
                 self.out.branch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
 
@@ -175,7 +175,7 @@ class SingleTopReconstruction(Module):
             self.out.fillBranch(self.outputName+"_ljet_partonFlavour_"+self.systName, getattr(ljet,"partonFlavour"))
 
         if not self.taggerName is None:
-            for label in Module.taggerLabels[taggerName]:
+            for label in Module.taggerLabels[self.taggerName]:
                 self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bjet,self.taggerName)[label])
                 self.out.fillBranch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(ljet,self.taggerName)[label])
 

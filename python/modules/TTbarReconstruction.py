@@ -91,7 +91,7 @@ class TTbarReconstruction(Module):
         self.out.branch(self.outputName+"_logProb_"+self.systName,"F")
         
         if not self.taggerName is None:
-            for label in Module.taggerLabels[taggerName]:
+            for label in Module.taggerLabels[self.taggerName]:
                 self.out.branch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
                 self.out.branch(self.outputName+"_bjetHadronic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
                 self.out.branch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,"F")
@@ -225,7 +225,7 @@ class TTbarReconstruction(Module):
         self.out.fillBranch(self.outputName+"_bjetLeptonic_eta_"+self.systName,bestPermutation["bFromLeptonicTop"].eta)
 
         if not self.taggerName is None:
-            for label in Module.taggerLabels[taggerName]:
+            for label in Module.taggerLabels[self.taggerName]:
                 self.out.fillBranch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],self.taggerName)[label])
                 self.out.fillBranch(self.outputName+"_bjetHadronic_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],self.taggerName)[label])
                 self.out.fillBranch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["ljetFromW_1"],self.taggerName)[label])
