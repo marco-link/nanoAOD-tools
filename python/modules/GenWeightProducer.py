@@ -4,20 +4,15 @@ import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 class GenWeightProducer(Module):
-    def __init__(self, isSignal=False):
-        self.isSignal = isSignal
+    def __init__(self, nPDFs=101):
 
-        self.nPDFs = 103
+        self.nPDFs = nPDFs
         self.nPSweights = 4
         self.nMEweights = 9
-
-        if self.isSignal:
-            self.nPDFs = 101
 
         self.fragWeights = ['fragCP5BLVsPt','fragCP5BLdownVsPt','fragCP5BLupVsPt',
                             'fragCP5PetersonVsPt','fragCP5PetersondownVsPt','fragCP5PetersonupVsPt',
                             'semilepbrdown','semilepbrup']
-
         pass
 
     def beginJob(self):

@@ -68,6 +68,13 @@ Module.globalOptions = globalOptions
 isMC = not args.isData
 isPowheg = 'powheg' in args.inputFiles[0].lower()
 isPowhegTTbar = 'TTTo' in args.inputFiles[0] and isPowheg
+isST = 'ST_' in args.inputFiles[0]
+isWjets = 'WJetsToLNu_' in args.inputFiles[0]
+saveGenWeights = args.isSignal or isPowhegTTbar or isST or isWjets
+
+nPDF_weights = 103
+if args.isSignal or (isST and not 'ST_t-channel_' in args.inputFiles[0]):
+    nPDF_weights = 101
 
 minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
 minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
@@ -373,11 +380,12 @@ if args.isSignal:
     )
 
 if not args.isData and not args.nosys:
-    analyzerChain.append(
-        GenWeightProducer(
-            isSignal = args.isSignal
+    if saveGenWeights:
+        analyzerChain.append(
+            GenWeightProducer(
+                nPDFs = nPDF_weights,
+            )
         )
-    )
     if isPowhegTTbar:
         analyzerChain.append(
             TopPtWeightProducer(
