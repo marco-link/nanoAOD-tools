@@ -12,6 +12,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor \
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel \
     import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
+from PhysicsTools.NanoAODTools.postprocessing.framework.crabhelper import inputFiles
 
 # this module must be defined before importing others
 taggerName = "bChargeTag"
@@ -40,10 +41,16 @@ parser.add_argument('--year', dest='year',
 parser.add_argument('--ntags', dest='ntags', type=int,
                     default=-1, choices=[-1,0,1,2])
 parser.add_argument('-i','--input', dest='inputFiles', action='append', default=[])
+parser.add_argument('-o','--output', dest='output', default='.')
 parser.add_argument('--maxEvents', dest='maxEvents', type=int, default=None)
-parser.add_argument('output', nargs=1)
+parser.add_argument('--crab', dest='crab', action='store_true', default=False)
 
 args = parser.parse_args()
+print(args)
+
+inputFiles = args.inputFiles
+if args.crab:
+    inputFiles = inputFiles()
 
 print "isData:",args.isData
 print "isSignal:",args.isSignal
@@ -51,9 +58,9 @@ print "ntags:",args.ntags
 print "evaluate systematics:",not args.nosys
 print "evaluate tagger:",not args.notagger
 print "invert lepton id/iso:",args.invid
-print "inputs:",len(args.inputFiles)
+print "inputs:",len(inputFiles)
 print "year:", args.year
-print "output directory:", args.output[0]
+print "output directory:", args.output
 if args.maxEvents:
     print 'max number of events', args.maxEvents
 
@@ -66,14 +73,14 @@ globalOptions = {
 Module.globalOptions = globalOptions
 
 isMC = not args.isData
-isPowheg = 'powheg' in args.inputFiles[0].lower()
-isPowhegTTbar = 'TTTo' in args.inputFiles[0] and isPowheg
-isST = 'ST_' in args.inputFiles[0]
-isWjets = 'WJetsToLNu_' in args.inputFiles[0]
+isPowheg = 'powheg' in inputFiles[0].lower()
+isPowhegTTbar = 'TTTo' in inputFiles[0] and isPowheg
+isST = 'ST_' in inputFiles[0]
+isWjets = 'WJetsToLNu_' in inputFiles[0]
 saveGenWeights = args.isSignal or isPowhegTTbar or isST or isWjets
 
 nPDF_weights = 103
-if args.isSignal or (isST and not 'ST_t-channel_' in args.inputFiles[0]):
+if args.isSignal or (isST and not 'ST_t-channel_' in inputFiles[0]):
     nPDF_weights = 101
 
 minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
@@ -434,13 +441,16 @@ if not globalOptions["isData"]:
     analyzerChain.append(EventInfo(storeVariables=storeVariables))
 
 p = PostProcessor(
-    args.output[0],
-    args.inputFiles,
+    args.output,
+    inputFiles,
     cut="(nJet>1)&&((nElectron+nMuon)>0)",
     modules=analyzerChain,
-    friend=True,
-    maxEntries = args.maxEvents
+    friend=False,
+    outputbranchsel= './branchfilter.txt' if args.crab else os.path.dirname(__file__) + '/branchfilter.txt',
+    maxEntries= args.maxEvents,
+    provenance=args.crab,
+    fwkJobReport=args.crab,
+    haddFileName='nano.root'
 )
 
 p.run()
-

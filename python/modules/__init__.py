@@ -48,7 +48,4 @@ from PartonLevel import PartonLevel
 from JetGenCharge import JetGenChargeProducer
 from CalcVar import CalcVar
 from WbReconstruction import WbReconstruction
-from WbGen import WbGenProducer
-from AsymBin import AsymBinProducer
-from ChargeSmear import ChargeSmearProducer
 from Tagger import TagJetProducer
