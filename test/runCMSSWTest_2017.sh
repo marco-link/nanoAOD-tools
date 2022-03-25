@@ -17,10 +17,10 @@ function run_test()
     echo
 
     echo "==================== signal 2017 ====================="
-    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isSignal --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_WbjToLNu.root . || return 1
+    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isSignal --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_WbjToLNu.root || return 1
     echo
     echo "==================== semileptonic ttbar 2017 ====================="
-    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_TTToSemiLeptonic.root . || return 1
+    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_TTToSemiLeptonic.root || return 1
    
     echo "==================== done ====================="
 }
