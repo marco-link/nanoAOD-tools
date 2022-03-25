@@ -5,6 +5,7 @@ import json
 import ROOT
 import random
 import numpy as np
+import feature_dict_module
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
@@ -22,6 +23,8 @@ class SingleTopReconstruction(Module):
          leptonObject=lambda event: Collection(event, "Muon")[0],
          wbosonCollection=lambda event: [],
          metObject=lambda event: Object("MET"),
+         taggerName = 'nn',
+         notagger = False,
          outputName="top",
          systName = "nominal",
      ):
@@ -33,6 +36,8 @@ class SingleTopReconstruction(Module):
         
         self.outputName = outputName
         self.systName = systName
+        self.taggerName = taggerName
+        self.notagger = notagger
 
 
     def beginJob(self):
@@ -54,7 +59,21 @@ class SingleTopReconstruction(Module):
         self.out.branch(self.outputName+"_bjet_lepton_deta_"+self.systName, "F")
         self.out.branch(self.outputName+"_bjet_ljet_dR_"+self.systName, "F")
         
+        self.out.branch(self.outputName+"_bjet_pt"+self.systName,"F")
+        self.out.branch(self.outputName+"_bjet_eta"+self.systName,"F")
+        self.out.branch(self.outputName+"_bjet_hadronFlavour"+self.systName,"F")
+        self.out.branch(self.outputName+"_bjet_partonFlavour"+self.systName,"F")
+
+        self.out.branch(self.outputName+"_ljet_pt"+self.systName,"F")
+        self.out.branch(self.outputName+"_ljet_eta"+self.systName,"F")
+        self.out.branch(self.outputName+"_ljet_hadronFlavour"+self.systName,"F")
+        self.out.branch(self.outputName+"_ljet_partonFlavour"+self.systName,"F")
         
+        if not self.notagger:
+            for label in feature_dict_module.predictionLabels:
+                self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
+                self.out.branch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
+
         
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -144,6 +163,22 @@ class SingleTopReconstruction(Module):
         self.out.fillBranch(self.outputName+"_ljet_eta_"+self.systName, ljet.eta)
         self.out.fillBranch(self.outputName+"_bjet_lepton_deta_"+self.systName,  math.fabs(bjet.eta-lepton.eta))
         self.out.fillBranch(self.outputName+"_bjet_ljet_dR_"+self.systName, deltaR(ljet,bjet))
+
+        self.out.fillBranch(self.outputName+"_bjet_pt"+self.systName, bjet.pt)
+        self.out.fillBranch(self.outputName+"_bjet_eta"+self.systName, bjet.eta)
+        self.out.fillBranch(self.outputName+"_bjet_hadronFlavour"+self.systName, getattr(bjet,"hadronFlavour"))
+        self.out.fillBranch(self.outputName+"_bjet_partonFlavour"+self.systName, getattr(bjet,"partonFlavour"))
+
+        self.out.fillBranch(self.outputName+"_ljet_pt"+self.systName, ljet.pt)
+        self.out.fillBranch(self.outputName+"_ljet_eta"+self.systName, ljet.eta)
+        self.out.fillBranch(self.outputName+"_ljet_hadronFlavour"+self.systName, getattr(ljet,"hadronFlavour"))
+        self.out.fillBranch(self.outputName+"_ljet_partonFlavour"+self.systName, getattr(ljet,"partonFlavour"))
+
+        if not self.notagger:
+            for label in feature_dict_module.predictionLabels:
+                self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bjet,self.taggerName)[label])
+                self.out.fillBranch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(ljet,self.taggerName)[label])
+
         
         return True
 

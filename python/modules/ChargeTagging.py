@@ -7,6 +7,7 @@ import random
 import numpy as np
 import time
 import imp
+import feature_dict_module
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
@@ -18,7 +19,6 @@ class ChargeTagging(Module):
     def __init__(
         self,
         modelPath,
-        featureDictFile,
         inputCollections = [lambda event: Collection(event, "Jet")],
         filterJets = lambda jet: True,
         taggerName = "nn",
@@ -26,12 +26,7 @@ class ChargeTagging(Module):
         self.modelPath = os.path.expandvars(modelPath)
         
         self.inputCollections = inputCollections
-        
-        feature_dict_module = imp.load_source(
-            'feature_dict',
-            os.path.expandvars(featureDictFile)
-        )
-        
+                
         self.featureDict = feature_dict_module.featureDict
         self.predictionLabels = feature_dict_module.predictionLabels
         
@@ -119,8 +114,17 @@ class ChargeTagging(Module):
 
         if event._tree._ttreereaderversion > self._ttreereaderversion:
             self.setup(event._tree)
+
         if len(jetOriginIndices)==0:
+            resultDict = {}
+            for ilabel,labelName in enumerate(self.predictionLabels):
+                resultDict[labelName] = -1.
+            for jetCollection in self.inputCollections:
+                jets = jetCollection(event)
+                for ijet, jet in enumerate(jets):
+                    setattr(jet,self.taggerName,resultDict)
             return True
+
         jetOriginIndices = list(jetOriginIndices)
         result = self.tfEvalParametric.evaluate(
             len(jetOriginIndices),
