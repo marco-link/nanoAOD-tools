@@ -145,13 +145,17 @@ class SingleTopReconstruction(Module):
         leptonInWbosonRestframe.Boost(-wboson.p4().BoostVector())
         topInWbosonRestframe = -top.p4()
         topInWbosonRestframe.Boost(-wboson.p4().BoostVector())
-        cosWhel = leptonInWbosonRestframe.Vect().Dot(topInWbosonRestframe.Vect())/leptonInWbosonRestframe.Vect().Mag()/topInWbosonRestframe.Vect().Mag()
+        if abs(leptonInWbosonRestframe.Vect().Mag()*topInWbosonRestframe.Vect().Mag()) > 0:
+            cosWhel = leptonInWbosonRestframe.Vect().Dot(topInWbosonRestframe.Vect())/leptonInWbosonRestframe.Vect().Mag()/topInWbosonRestframe.Vect().Mag()
+        else: cosWhel = -5
         
         leptonInTopRestframe = lepton.p4()
         leptonInTopRestframe.Boost(-top.p4().BoostVector())
         ljetInTopRestframe = ljet.p4()
         ljetInTopRestframe.Boost(-top.p4().BoostVector())
-        cosTopPolz = leptonInTopRestframe.Vect().Dot(ljetInTopRestframe.Vect())/leptonInTopRestframe.Vect().Mag()/ljetInTopRestframe.Vect().Mag()
+        if abs(leptonInTopRestframe.Vect().Mag()*ljetInTopRestframe.Vect().Mag()) > 0:
+            cosTopPolz = leptonInTopRestframe.Vect().Dot(ljetInTopRestframe.Vect())/leptonInTopRestframe.Vect().Mag()/ljetInTopRestframe.Vect().Mag()
+        else: cosTopPolz = -5
         
         self.out.fillBranch(self.outputName+"_mass_"+self.systName, top.mass)
         self.out.fillBranch(self.outputName+"_pt_"+self.systName, top.pt)
