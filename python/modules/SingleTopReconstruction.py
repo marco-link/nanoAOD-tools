@@ -6,7 +6,7 @@ import ROOT
 import random
 import numpy as np
 
-from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
+from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 from utils import deltaR, deltaPhi, PhysicsObject
@@ -21,7 +21,7 @@ class SingleTopReconstruction(Module):
          lJetCollection=lambda event: [],
          leptonObject=lambda event: Collection(event, "Muon")[0],
          wbosonCollection=lambda event: [],
-         metObject=lambda event: Object("MET"),
+         metObject=lambda event: Object(event,"MET"),
          taggerName = None,
          isMC = True,
          outputName="top",
@@ -147,7 +147,9 @@ class SingleTopReconstruction(Module):
         topInWbosonRestframe.Boost(-wboson.p4().BoostVector())
         if abs(leptonInWbosonRestframe.Vect().Mag()*topInWbosonRestframe.Vect().Mag()) > 0:
             cosWhel = leptonInWbosonRestframe.Vect().Dot(topInWbosonRestframe.Vect())/leptonInWbosonRestframe.Vect().Mag()/topInWbosonRestframe.Vect().Mag()
-        else: cosWhel = -5
+        else:
+            raise Warning('cosine of W-helicity undefined')
+            cosWhel = -5
         
         leptonInTopRestframe = lepton.p4()
         leptonInTopRestframe.Boost(-top.p4().BoostVector())
@@ -155,7 +157,9 @@ class SingleTopReconstruction(Module):
         ljetInTopRestframe.Boost(-top.p4().BoostVector())
         if abs(leptonInTopRestframe.Vect().Mag()*ljetInTopRestframe.Vect().Mag()) > 0:
             cosTopPolz = leptonInTopRestframe.Vect().Dot(ljetInTopRestframe.Vect())/leptonInTopRestframe.Vect().Mag()/ljetInTopRestframe.Vect().Mag()
-        else: cosTopPolz = -5
+        else:
+            raise Warning('cosine of top polarisation undefined')
+            cosTopPolz = -5
         
         self.out.fillBranch(self.outputName+"_mass_"+self.systName, top.mass)
         self.out.fillBranch(self.outputName+"_pt_"+self.systName, top.pt)
