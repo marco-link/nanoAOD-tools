@@ -87,7 +87,7 @@ minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
 met_variable = {
     '2016': lambda event: Object(event, "MET"),
     '2016preVFP': lambda event: Object(event, "MET"),
-    '2017': lambda event: Object(event, "MET"), #"METFixEE2017"), #TODO: check if this is still needed for UL
+    '2017': lambda event: Object(event, "MET"),
     '2018': lambda event: Object(event, "MET")
 }
 
