@@ -6,7 +6,7 @@ import ROOT
 import random
 import numpy as np
 
-from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
+from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 from utils import deltaR, deltaPhi, PhysicsObject
@@ -21,7 +21,7 @@ class SingleTopReconstruction(Module):
          lJetCollection=lambda event: [],
          leptonObject=lambda event: Collection(event, "Muon")[0],
          wbosonCollection=lambda event: [],
-         metObject=lambda event: Object("MET"),
+         metObject=lambda event: Object(event,"MET"),
          taggerName = None,
          isMC = True,
          outputName="top",

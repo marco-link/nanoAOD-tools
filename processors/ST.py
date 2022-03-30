@@ -84,13 +84,6 @@ if args.isSignal or (isST and not 'ST_t-channel_' in inputFiles[0]):
 minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
 minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
 
-met_variable = {
-    '2016': lambda event: Object(event, "MET"),
-    '2016preVFP': lambda event: Object(event, "MET"),
-    '2017': lambda event: Object(event, "MET"), #"METFixEE2017"), #TODO: check if this is still needed for UL
-    '2018': lambda event: Object(event, "MET")
-}
-
 jesUncertaintyFilesRegrouped = {
     '2016':       "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/jme/RegroupedV2_Summer19UL16_V7_MC_UncertaintySources_AK4PFchs.txt",
     '2016preVFP': "${CMSSW_BASE}/src/PhysicsTools/NanoAODTools/data/jme/RegroupedV2_Summer19UL16APV_V7_MC_UncertaintySources_AK4PFchs.txt",
@@ -190,8 +183,7 @@ def jetSelection(jetDict):
                 jetMinPt=30.,
                 jetMaxEta=2.4,
                 workingpoint = BTagSelection.TIGHT,
-                storeKinematics=[],
-                storeTruthKeys = ['hadronFlavour','partonFlavour'],
+                storeTruthKeys = ['hadronFlavour','partonFlavour'] if isMC else [],
             )
         )
 
@@ -307,12 +299,16 @@ if args.isData:
     )
     analyzerChain.extend(
         eventReconstruction({
-            "nominal": (lambda event: Collection(event,"Jet"),met_variable[args.year])
+            "nominal": (lambda event: event.selectedJets_nominal, lambda event: Object(event, "MET"))
         })
     )
 
 else:
-    analyzerChain.append(PUWeightProducer_dict[args.year]())
+    analyzerChain.append(
+        PUWeightProducer_dict[args.year](
+            doSysVar = not args.nosys
+        )
+    )
 
     if args.nosys:
         jesUncertaintyNames = []
@@ -328,7 +324,7 @@ else:
             jerResolutionFiles[args.year],
             jerSFUncertaintyFiles[args.year],
             jesUncertaintyNames = jesUncertaintyNames, 
-            metInput = met_variable[args.year],
+            metInput = lambda event: Object(event, "MET"),
             rhoInput = lambda event: event.fixedGridRhoFastjetAll,
             jetCollection = lambda event: Collection(event,"Jet"),
             lowPtJetCollection = lambda event: Collection(event,"CorrT1METJet"),
