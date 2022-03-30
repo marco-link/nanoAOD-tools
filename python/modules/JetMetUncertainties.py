@@ -175,7 +175,7 @@ class JetMetUncertainties(Module):
         genJetCollection = lambda event: Collection(event,"GenJet"),
         muonCollection = lambda event: Collection(event,"Muon"),
         electronCollection = lambda event: Collection(event,"Electron"),
-        jetMaxPtForMet = 2000,
+        jetMaxPtForMET = 2000,
         jetMaxEtaForMET = 5.0,
         propagateJER = True,
         outputJetPrefix = 'jets_',
