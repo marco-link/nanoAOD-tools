@@ -175,7 +175,8 @@ class JetMetUncertainties(Module):
         genJetCollection = lambda event: Collection(event,"GenJet"),
         muonCollection = lambda event: Collection(event,"Muon"),
         electronCollection = lambda event: Collection(event,"Electron"),
-        jetMaxEtaForMET = 4.7,
+        jetMaxPtForMet = 2000,
+        jetMaxEtaForMET = 5.0,
         propagateJER = True,
         outputJetPrefix = 'jets_',
         outputMetPrefix = 'met_',
@@ -192,6 +193,7 @@ class JetMetUncertainties(Module):
         self.muonCollection = muonCollection
         self.electronCollection = electronCollection
         self.propagateJER = propagateJER
+        self.jetMaxPtForMET = jetMaxPtForMET
         self.jetMaxEtaForMET = jetMaxEtaForMET
         self.outputJetPrefix = outputJetPrefix
         self.outputMetPrefix = outputMetPrefix
@@ -344,7 +346,7 @@ class JetMetUncertainties(Module):
                     met.uncertainty_p4['jes'+jesUncertaintyName+mode] = metP4(met)
                     
                 for jet in jets:
-                    if abs(jet.eta) > self.jetMaxEtaForMET:
+                    if abs(jet.eta) > self.jetMaxEtaForMET or jet.pt > self.jetMaxPtForMET:
                         continue
                     if jet.uncertainty_p4['jes'+jesUncertaintyName+mode].Pt()>self.unclEnThreshold and (jet.neEmEF+jet.chEmEF) < 0.9:
                         met.uncertainty_p4['jes'+jesUncertaintyName+mode] -= jet.uncertainty_p4['jes'+jesUncertaintyName+mode]-jet.uncertainty_p4['nominal']
