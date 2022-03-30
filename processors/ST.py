@@ -304,7 +304,11 @@ if args.isData:
     )
 
 else:
-    analyzerChain.append(PUWeightProducer_dict[args.year]())
+    analyzerChain.append(
+        PUWeightProducer_dict[args.year](
+            doSysVar = not args.nosys
+        )
+    )
 
     if args.nosys:
         jesUncertaintyNames = []
