@@ -145,21 +145,13 @@ class SingleTopReconstruction(Module):
         leptonInWbosonRestframe.Boost(-wboson.p4().BoostVector())
         topInWbosonRestframe = -top.p4()
         topInWbosonRestframe.Boost(-wboson.p4().BoostVector())
-        if abs(leptonInWbosonRestframe.Vect().Mag()*topInWbosonRestframe.Vect().Mag()) > 0:
-            cosWhel = leptonInWbosonRestframe.Vect().Dot(topInWbosonRestframe.Vect())/leptonInWbosonRestframe.Vect().Mag()/topInWbosonRestframe.Vect().Mag()
-        else:
-            raise Warning('cosine of W-helicity undefined')
-            cosWhel = -5
+        cosWhel = leptonInWbosonRestframe.Vect().Dot(topInWbosonRestframe.Vect())/leptonInWbosonRestframe.Vect().Mag()/topInWbosonRestframe.Vect().Mag()
         
         leptonInTopRestframe = lepton.p4()
         leptonInTopRestframe.Boost(-top.p4().BoostVector())
         ljetInTopRestframe = ljet.p4()
         ljetInTopRestframe.Boost(-top.p4().BoostVector())
-        if abs(leptonInTopRestframe.Vect().Mag()*ljetInTopRestframe.Vect().Mag()) > 0:
-            cosTopPolz = leptonInTopRestframe.Vect().Dot(ljetInTopRestframe.Vect())/leptonInTopRestframe.Vect().Mag()/ljetInTopRestframe.Vect().Mag()
-        else:
-            raise Warning('cosine of top polarisation undefined')
-            cosTopPolz = -5
+        cosTopPolz = leptonInTopRestframe.Vect().Dot(ljetInTopRestframe.Vect())/leptonInTopRestframe.Vect().Mag()/ljetInTopRestframe.Vect().Mag()
         
         self.out.fillBranch(self.outputName+"_mass_"+self.systName, top.mass)
         self.out.fillBranch(self.outputName+"_pt_"+self.systName, top.pt)

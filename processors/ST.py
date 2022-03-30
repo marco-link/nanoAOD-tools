@@ -83,6 +83,7 @@ if args.isSignal or (isST and not 'ST_t-channel_' in inputFiles[0]):
 
 minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
 minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
+jetMaxEta = 4.7
 
 met_variable = {
     '2016': lambda event: Object(event, "MET"),
@@ -174,7 +175,7 @@ def jetSelection(jetDict):
                 inputCollection=jetCollection,
                 leptonCollectionDRCleaning=lambda event: event.tightMuons+event.tightElectrons,
                 jetMinPt=30.,
-                jetMaxEta=4.7,
+                jetMaxEta=jetMaxEta,
                 dRCleaning=0.4,
                 jetId=JetSelection.TIGHT,
                 outputName="selectedJets_"+systName,
@@ -335,6 +336,7 @@ else:
             genJetCollection = lambda event: Collection(event,"GenJet"),
             muonCollection = lambda event: Collection(event,"Muon"),
             electronCollection = lambda event: Collection(event,"Electron"),
+            jetMaxEtaForMET = jetMaxEta,
             propagateJER = False,
             outputJetPrefix = 'jets_',
             outputMetPrefix = 'met_',
