@@ -21,7 +21,13 @@ function run_test()
     echo
     echo "==================== semileptonic ttbar 2017 ====================="
     python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_TTToSemiLeptonic.root || return 1
-   
+    echo
+    echo "==================== single muon 2017 ====================="
+    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isData --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_SingleMuon.root || return 1
+    echo
+    echo "==================== single electron 2017 ====================="
+    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isData --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/2017_test_SingleElectron.root || return 1
+    echo
     echo "==================== done ====================="
 }
 
