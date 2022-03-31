@@ -45,11 +45,7 @@ class SingleMuonTriggerSelection(Module):
 
                 self.triggerSFHist = getHist(
                     "PhysicsTools/NanoAODTools/data/muon/2017_UL/NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt.root",
-                    "NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt"
-                )
-                self.triggerSFHistErr = getHist(
-                    "PhysicsTools/NanoAODTools/data/muon/2017_UL/NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt.root",
-                    "NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt_combined_syst"
+                    "NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt_syst"
                 )
    
             elif Module.globalOptions["year"] == '2018':
@@ -97,15 +93,9 @@ class SingleMuonTriggerSelection(Module):
         if (not Module.globalOptions["isData"]) and len(muons)>0 and self.storeWeights: 
             weight_trigger,weight_trigger_err = getSFXY(self.triggerSFHist,muons[0].pt,abs(muons[0].eta))
             weight_trigger_nominal*=weight_trigger
-            if Module.globalOptions["year"] == '2017': #TO REMOVE
-                weight_trigger_syst, dummy = getSFXY(self.triggerSFHistErr,muons[0].pt,abs(muons[0].eta))
             if self.doVariations:
-                if Module.globalOptions["year"] == '2017': #TO REMOVE
-                    tot_err = (weight_trigger_err**2+weight_trigger_syst**2)**.5
-                else:
-                    tot_err = weight_trigger_err
-                weight_trigger_up*=(weight_trigger+tot_err)
-                weight_trigger_down*=(weight_trigger-tot_err)
+                weight_trigger_up*=(weight_trigger+weight_trigger_err)
+                weight_trigger_down*=(weight_trigger-weight_trigger_err)
 
         trigger_flag = 0
 
