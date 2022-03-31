@@ -332,7 +332,7 @@ class MuonSelection(Module):
 
                     else: #TODO other years
                         weight_id = weight_reco = weight_iso = 1
-                        weight_id_err = weight_reco_err = weight_iso_rel = 0
+                        weight_id_err = weight_reco_err = weight_iso_err = 0
 
                     weight_reco_nominal *= weight_reco
                     weight_id_nominal *= weight_id
