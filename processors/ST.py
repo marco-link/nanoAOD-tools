@@ -121,6 +121,7 @@ def leptonSequence():
             inputCollection=lambda event: event.tightMuons,
             outputName="IsoMuTrigger",
             storeWeights=True,
+            doVariations=not args.nosys,
         ),
         
         MuonVeto(

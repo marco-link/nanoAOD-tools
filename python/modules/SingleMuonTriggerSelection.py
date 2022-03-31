@@ -16,10 +16,12 @@ class SingleMuonTriggerSelection(Module):
         inputCollection = lambda event: getattr(event,"tightMuons"),
         storeWeights=True,
         outputName = "IsoMuTrigger",
+        doVariations = True
     ):
         self.inputCollection = inputCollection
         self.outputName = outputName
         self.storeWeights = storeWeights
+        self.doVariations = doVariations
 
         if not Module.globalOptions["isData"]:
             if Module.globalOptions["year"] == '2016' or Module.globalOptions["year"] == '2016preVFP':
@@ -42,8 +44,12 @@ class SingleMuonTriggerSelection(Module):
             elif Module.globalOptions["year"] == '2017':
 
                 self.triggerSFHist = getHist(
-                    "PhysicsTools/NanoAODTools/data/muon/2017/EfficienciesStudies_2017_trigger_EfficienciesAndSF_RunBtoF_Nov17Nov2017.root",
-                    "IsoMu27_PtEtaBins/pt_abseta_ratio"
+                    "PhysicsTools/NanoAODTools/data/muon/2017_UL/NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt.root",
+                    "NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt"
+                )
+                self.triggerSFHistErr = getHist(
+                    "PhysicsTools/NanoAODTools/data/muon/2017_UL/NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt.root",
+                    "NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt_combined_syst"
                 )
    
             elif Module.globalOptions["year"] == '2018':
@@ -70,8 +76,9 @@ class SingleMuonTriggerSelection(Module):
         
         if not self.globalOptions["isData"] and self.storeWeights:
             self.out.branch(self.outputName+"_weight_trigger_{}_nominal".format(Module.globalOptions['year'].replace('preVFP','')),"F")
-            self.out.branch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),"F")
-            self.out.branch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),"F")
+            if self.doVariations:
+                self.out.branch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),"F")
+                self.out.branch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),"F")
             
             
         
@@ -83,14 +90,22 @@ class SingleMuonTriggerSelection(Module):
         muons = self.inputCollection(event)
         
         weight_trigger_nominal = 1.
-        weight_trigger_up = 1.
-        weight_trigger_down = 1.
+        if self.doVariations:
+            weight_trigger_up = 1.
+            weight_trigger_down = 1.
         
         if (not Module.globalOptions["isData"]) and len(muons)>0 and self.storeWeights: 
             weight_trigger,weight_trigger_err = getSFXY(self.triggerSFHist,muons[0].pt,abs(muons[0].eta))
             weight_trigger_nominal*=weight_trigger
-            weight_trigger_up*=(weight_trigger+weight_trigger_err)
-            weight_trigger_down*=(weight_trigger-weight_trigger_err)
+            if Module.globalOptions["year"] == '2017': #TO REMOVE
+                weight_trigger_syst, dummy = getSFXY(self.triggerSFHistErr,muons[0].pt,abs(muons[0].eta))
+            if self.doVariations:
+                if Module.globalOptions["year"] == '2017': #TO REMOVE
+                    tot_err = (weight_trigger_err**2+weight_trigger_syst**2)**.5
+                else:
+                    tot_err = weight_trigger_err
+                weight_trigger_up*=(weight_trigger+tot_err)
+                weight_trigger_down*=(weight_trigger-tot_err)
 
         trigger_flag = 0
 
@@ -107,8 +122,9 @@ class SingleMuonTriggerSelection(Module):
             
         if not Module.globalOptions["isData"] and self.storeWeights:
             self.out.fillBranch(self.outputName+"_weight_trigger_{}_nominal".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_nominal)
-            self.out.fillBranch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_up)
-            self.out.fillBranch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_down)
+            if self.doVariations:
+                self.out.fillBranch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_up)
+                self.out.fillBranch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_down)
 
         return True
         
