@@ -116,6 +116,8 @@ def leptonSequence():
             triggerMatch=True,
             muonID=MuonSelection.TIGHT,
             muonIso=MuonSelection.INV if args.invid else MuonSelection.VERYTIGHT,
+            doVariations = not args.nosys
+            additionalSyst=True,
         ),
         SingleMuonTriggerSelection(
             inputCollection=lambda event: event.tightMuons,
