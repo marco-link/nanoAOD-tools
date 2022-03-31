@@ -182,7 +182,7 @@ class MuonSelection(Module):
 
         if muonID==MuonSelection.TIGHT:
             self.muonIdFct = lambda muon: muon.tightId==1
-            #self.muonIdSF = self.idTightSFHist
+            self.muonIdSF = self.idTightSFHist
         elif muonID==MuonSelection.LOOSE:
             self.muonIdFct = lambda muon: muon.looseId==1
             #self.muonIdSF = self.idLooseSFHist
@@ -306,18 +306,18 @@ class MuonSelection(Module):
                 #TODO
                 '''
                 if not Module.globalOptions["isData"] and self.storeWeights:
-                    if Module.globalOptions["year"] == 2016:
+                    if Module.globalOptions["year"] == '2016':
                         weight_id,weight_id_err = getSFXY(self.muonIdSF,muon.eta,muon.pt)
-                    elif Module.globalOptions["year"] == 2017 or Module.globalOptions["year"] == 2018:
+                    elif Module.globalOptions["year"] == '2017' or Module.globalOptions["year"] == '2018':
                         weight_id,weight_id_err = getSFXY(self.muonIdSF,muon.pt, abs(muon.eta))
                         
                     weight_id_nominal *= weight_id
                     weight_id_up *=  weight_id+weight_id_err
                     weight_id_down *= weight_id-weight_id_err
                     
-                    if Module.globalOptions["year"] == 2016:
+                    if Module.globalOptions["year"] == '2016':
                         weight_iso,weight_iso_err = getSFXY(self.muonIsoSF,muon.eta,muon.pt)
-                    elif Module.globalOptions["year"] == 2017 or Module.globalOptions["year"] == 2018:
+                    elif Module.globalOptions["year"] == '2017' or Module.globalOptions["year"] == '2018':
                         weight_iso,weight_iso_err = getSFXY(self.muonIsoSF,muon.pt, abs(muon.eta))
 
                     weight_iso_nominal *= weight_iso
@@ -325,12 +325,12 @@ class MuonSelection(Module):
                     weight_iso_down *= weight_iso-weight_iso_err
                 '''
                 if not Module.globalOptions["isData"] and self.storeWeights:
-                    if Module.globalOptions["year"] == 2017:
-                        weight_reco,weight_reco_err = getSFXY(self.muonRecoSF,abs(muon.eta),muon.pt)
+                    if Module.globalOptions["year"] == '2017':
+                        weight_reco,weight_reco_err = getSFXY(self.muonRecoSFHist,abs(muon.eta),muon.pt)
                         weight_id,weight_id_err = getSFXY(self.muonIdSF,abs(muon.eta),muon.pt)
                         weight_iso,weight_iso_err = getSFXY(self.muonIsoSF,abs(muon.eta),muon.pt)
 
-                    else: #TODO other years
+                    else: #TODO other years (remove if/else)
                         weight_id = weight_reco = weight_iso = 1
                         weight_id_err = weight_reco_err = weight_iso_err = 0
 
