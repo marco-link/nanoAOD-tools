@@ -11,7 +11,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from utils import getGraph, getHist, combineHist2D, getSFXY, deltaR
 
 class MuonSelection(Module):
-    VERYTIGHT = 1
+    VERYTIGHT = 0
     TIGHT = 1
     MEDIUM = 2
     LOOSE = 3
@@ -175,10 +175,10 @@ class MuonSelection(Module):
                 "PhysicsTools/NanoAODTools/data/muon/2018/EfficienciesStudies_2018_rootfiles_RunABCD_SF_ISO.root",
                 "NUM_LooseRelIso_DEN_LooseID_pt_abseta"
             )
-        '''
+
         else:
             raise Exception("Error - invalid year for muon efficiencies")
-
+        '''
 
         if muonID==MuonSelection.TIGHT:
             self.muonIdFct = lambda muon: muon.tightId==1
