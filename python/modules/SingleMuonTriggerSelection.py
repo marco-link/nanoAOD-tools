@@ -91,7 +91,7 @@ class SingleMuonTriggerSelection(Module):
             weight_trigger_down = 1.
         
         if (not Module.globalOptions["isData"]) and len(muons)>0 and self.storeWeights: 
-            weight_trigger,weight_trigger_err = getSFXY(self.triggerSFHist,muons[0].pt,abs(muons[0].eta))
+            weight_trigger,weight_trigger_err = getSFXY(self.triggerSFHist,abs(muons[0].eta),muons[0].pt)
             weight_trigger_nominal*=weight_trigger
             if self.doVariations:
                 weight_trigger_up*=(weight_trigger+weight_trigger_err)
