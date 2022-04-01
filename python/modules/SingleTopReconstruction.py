@@ -70,10 +70,8 @@ class SingleTopReconstruction(Module):
         
         if not self.taggerName is None:
             self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreIndex_"+self.systName,"I")
-            self.out.branch(self.outputName+"_ljet_"+self.taggerName+"_highestScoreIndex_"+self.systName,"I")
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
-                self.out.branch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
 
         
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -179,11 +177,8 @@ class SingleTopReconstruction(Module):
         if not self.taggerName is None:
             self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreIndex_"+self.systName,
                                 Module.taggerLabels[self.taggerName].index(max(getattr(bjet,self.taggerName), key = lambda k: getattr(bjet,self.taggerName)[k])))
-            self.out.fillBranch(self.outputName+"_ljet_"+self.taggerName+"_highestScoreIndex_"+self.systName,
-                                Module.taggerLabels[self.taggerName].index(max(getattr(ljet,self.taggerName), key = lambda k: getattr(ljet,self.taggerName)[k])))
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bjet,self.taggerName)[label])
-                self.out.fillBranch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(ljet,self.taggerName)[label])
 
         
         return True
