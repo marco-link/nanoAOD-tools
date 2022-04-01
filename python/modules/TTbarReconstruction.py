@@ -91,21 +91,24 @@ class TTbarReconstruction(Module):
         self.out.branch(self.outputName+"_logProb_"+self.systName,"F")
         
         if not self.taggerName is None:
+            self.out.branch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_highestScoreIndex_"+self.systName,"I")
+            self.out.branch(self.outputName+"_bjetHadronic_"+self.taggerName+"_highestScoreIndex_"+self.systName,"I")
+            self.out.branch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_highestScoreValue_"+self.systName,"F")
+            self.out.branch(self.outputName+"_bjetHadronic_"+self.taggerName+"_highestScoreValue_"+self.systName,"F")
+
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.branch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
                 self.out.branch(self.outputName+"_bjetHadronic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
-                self.out.branch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,"F")
-                self.out.branch(self.outputName+"_ljetFromW_2_"+self.taggerName+"_"+label+"_"+self.systName,"F")
 
         if self.isMC:
-            self.out.branch(self.outputName+"_bjetLeptonic_hadronFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_bjetLeptonic_partonFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_bjetHadronic_hadronFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_bjetHadronic_partonFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_ljetFromW_1_hadronFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_ljetFromW_1_partonFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_ljetFromW_2_hadronFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_ljetFromW_2_partonFlavour_"+self.systName,"F")
+            self.out.branch(self.outputName+"_bjetLeptonic_hadronFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_bjetLeptonic_partonFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_bjetHadronic_hadronFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_bjetHadronic_partonFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_ljetFromW_1_hadronFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_ljetFromW_1_partonFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_ljetFromW_2_hadronFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_ljetFromW_2_partonFlavour_"+self.systName,"I")
         
         
     def getLeptonicLogProbability(self,mLeptonicTop):
@@ -225,11 +228,20 @@ class TTbarReconstruction(Module):
         self.out.fillBranch(self.outputName+"_bjetLeptonic_eta_"+self.systName,bestPermutation["bFromLeptonicTop"].eta)
 
         if not self.taggerName is None:
+            self.out.fillBranch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_highestScoreIndex_"+self.systName,
+                                Module.taggerLabels[self.taggerName].index(max(getattr(bestPermutation["bFromLeptonicTop"],self.taggerName),
+                                                                               key = lambda k: getattr(bestPermutation["bFromLeptonicTop"],self.taggerName)[k])))
+            self.out.fillBranch(self.outputName+"_bjetHadronic_"+self.taggerName+"_highestScoreIndex_"+self.systName,
+                                Module.taggerLabels[self.taggerName].index(max(getattr(bestPermutation["bFromHadronicTop"],self.taggerName),
+                                                                               key = lambda k: getattr(bestPermutation["bFromHadronicTop"],self.taggerName)[k])))
+
+            self.out.fillBranch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_highestScoreValue_"+self.systName, max(getattr(bestPermutation["bFromLeptonicTop"],self.taggerName).values()))
+            self.out.fillBranch(self.outputName+"_bjetHadronic_"+self.taggerName+"_highestScoreValue_"+self.systName, max(getattr(bestPermutation["bFromHadronicTop"],self.taggerName).values()))
+
+
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.fillBranch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],self.taggerName)[label])
                 self.out.fillBranch(self.outputName+"_bjetHadronic_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["bFromHadronicTop"],self.taggerName)[label])
-                self.out.fillBranch(self.outputName+"_ljetFromW_1_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["ljetFromW_1"],self.taggerName)[label])
-                self.out.fillBranch(self.outputName+"_ljetFromW_2_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["ljetFromW_2"],self.taggerName)[label])
 
         if self.isMC:
             self.out.fillBranch(self.outputName+"_bjetLeptonic_hadronFlavour_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],"hadronFlavour"))

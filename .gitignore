@@ -9,7 +9,7 @@ build
 *.d
 *.so
 *.pcm
-*.root
+
 
 crab/crab*
 crab/20*.py
