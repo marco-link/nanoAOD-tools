@@ -70,6 +70,7 @@ class SingleTopReconstruction(Module):
         
         if not self.taggerName is None:
             self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreIndex_"+self.systName,"I")
+            self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreValue_"+self.systName,"F")
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
 
@@ -177,6 +178,7 @@ class SingleTopReconstruction(Module):
         if not self.taggerName is None:
             self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreIndex_"+self.systName,
                                 Module.taggerLabels[self.taggerName].index(max(getattr(bjet,self.taggerName), key = lambda k: getattr(bjet,self.taggerName)[k])))
+            self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreValue_"+self.systName,max(getattr(bjet,self.taggerName).values()))
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bjet,self.taggerName)[label])
 

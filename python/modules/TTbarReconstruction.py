@@ -93,6 +93,9 @@ class TTbarReconstruction(Module):
         if not self.taggerName is None:
             self.out.branch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_highestScoreIndex_"+self.systName,"I")
             self.out.branch(self.outputName+"_bjetHadronic_"+self.taggerName+"_highestScoreIndex_"+self.systName,"I")
+            self.out.branch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_highestScoreValue_"+self.systName,"F")
+            self.out.branch(self.outputName+"_bjetHadronic_"+self.taggerName+"_highestScoreValue_"+self.systName,"F")
+
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.branch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
                 self.out.branch(self.outputName+"_bjetHadronic_"+self.taggerName+"_"+label+"_"+self.systName,"F")
@@ -231,6 +234,10 @@ class TTbarReconstruction(Module):
             self.out.fillBranch(self.outputName+"_bjetHadronic_"+self.taggerName+"_highestScoreIndex_"+self.systName,
                                 Module.taggerLabels[self.taggerName].index(max(getattr(bestPermutation["bFromHadronicTop"],self.taggerName),
                                                                                key = lambda k: getattr(bestPermutation["bFromHadronicTop"],self.taggerName)[k])))
+
+            self.out.fillBranch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_highestScoreValue_"+self.systName, max(getattr(bestPermutation["bFromLeptonicTop"],self.taggerName).values()))
+            self.out.fillBranch(self.outputName+"_bjetHadronic_"+self.taggerName+"_highestScoreValue_"+self.systName, max(getattr(bestPermutation["bFromHadronicTop"],self.taggerName).values()))
+
 
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.fillBranch(self.outputName+"_bjetLeptonic_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bestPermutation["bFromLeptonicTop"],self.taggerName)[label])
