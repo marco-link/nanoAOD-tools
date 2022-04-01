@@ -11,7 +11,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from utils import getGraph, getHist, combineHist2D, getSFXY, deltaR
 
 class MuonSelection(Module):
-    VERYTIGHT = 1
+    VERYTIGHT = 0
     TIGHT = 1
     MEDIUM = 2
     LOOSE = 3
@@ -29,6 +29,8 @@ class MuonSelection(Module):
         muonMaxEta=2.4,
         storeKinematics=['pt','eta'],
         storeWeights=False,
+        doVariations=True,
+        additionalSyst=False,
     ):
         
         self.inputCollection = inputCollection
@@ -38,8 +40,10 @@ class MuonSelection(Module):
         self.storeKinematics = storeKinematics
         self.storeWeights = storeWeights
         self.triggerMatch = triggerMatch
+        self.doVariations = doVariations
+        self.additionalSyst = additionalSyst
 
-        if muonID==MuonSelection.MEDIUM or muonIso==MuonSelection.MEDIUM:
+        if muonID==MuonSelection.MEDIUM or muonIso==MuonSelection.MEDIUM or muonIso==MuonSelection.TIGHT:
             raise Exception("Unsupported ID or ISO")
 
         self.triggerObjectCollection = lambda event: Collection(event, "TrigObj") if triggerMatch else lambda event: []
@@ -114,30 +118,38 @@ class MuonSelection(Module):
             )
 
         elif Module.globalOptions["year"] == '2017':
+        '''
+        if Module.globalOptions["year"] == '2017':
             #tight id efficiency
             self.idTightSFHist = getHist(
-                "PhysicsTools/NanoAODTools/data/muon/2017/RunBCDEF_SF_ID.root",
-                "NUM_TightID_DEN_genTracks_pt_abseta"
+                "PhysicsTools/NanoAODTools/data/muon/2017_UL/Efficiencies_muon_generalTracks_Z_Run2017_UL_ID.root",
+                "NUM_TightID_DEN_TrackerMuons_abseta_pt_syst"
             )
             
-            #loose id efficiency
-            self.idLooseSFHist = getHist(
-                "PhysicsTools/NanoAODTools/data/muon/2017/RunBCDEF_SF_ID.root",
-                "NUM_LooseID_DEN_genTracks_pt_abseta"
-            )
+            # #loose id efficiency
+            # self.idLooseSFHist = getHist(
+            #     "PhysicsTools/NanoAODTools/data/muon/2017/RunBCDEF_SF_ID.root",
+            #     "NUM_LooseID_DEN_genTracks_pt_abseta"
+            # )
             
             #tight iso and tight id efficiency
-            self.isoTightTightSFHist = getHist(
-                "PhysicsTools/NanoAODTools/data/muon/2017/RunBCDEF_SF_ISO.root",
-                "NUM_TightRelIso_DEN_TightIDandIPCut_pt_abseta"
-            )
-            
-            #loose iso and loose id efficiency
-            self.isoLooseLooseSFHist = getHist(
-                "PhysicsTools/NanoAODTools/data/muon/2017/RunBCDEF_SF_ISO.root",
-                "NUM_LooseRelIso_DEN_LooseID_pt_abseta"
+            self.isoVeryTightSFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/muon/2017_UL/NUM_VeryTightRelIso_DEN_TightIDandIPCut_abseta_pt.root",
+                "NUM_VeryTightRelIso_DEN_TightIDandIPCut_abseta_pt_syst"
             )
 
+            # muon reconstruction
+            self.muonRecoSFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/muon/2017_UL/Efficiency_muon_generalTracks_Run2017_UL_trackerMuon.root",
+                "NUM_TrackerMuons_DEN_genTracks"
+            )
+
+            # #loose iso and loose id efficiency
+            # self.isoLooseLooseSFHist = getHist(
+            #     "PhysicsTools/NanoAODTools/data/muon/2017/RunBCDEF_SF_ISO.root",
+            #     "NUM_LooseRelIso_DEN_LooseID_pt_abseta"
+            # )
+        '''
         elif Module.globalOptions["year"] == '2018':
 
             #tight id efficiency
@@ -166,11 +178,11 @@ class MuonSelection(Module):
 
         else:
             raise Exception("Error - invalid year for muon efficiencies")
-
         '''
+
         if muonID==MuonSelection.TIGHT:
             self.muonIdFct = lambda muon: muon.tightId==1
-            #self.muonIdSF = self.idTightSFHist
+            self.muonIdSF = self.idTightSFHist
         elif muonID==MuonSelection.LOOSE:
             self.muonIdFct = lambda muon: muon.looseId==1
             #self.muonIdSF = self.idLooseSFHist
@@ -181,13 +193,11 @@ class MuonSelection(Module):
             
         if muonIso==MuonSelection.VERYTIGHT:
             self.muonIsoFct = lambda muon: muon.pfRelIso04_all<0.06
-            '''
             if muonID==MuonSelection.TIGHT:
-                #TODO: need to use very tight SFs
-                self.muonIsoSF = self.isoTightTightSFHist
+                self.muonIsoSF = self.isoVeryTightSFHist
             else:
                 raise Exception("Error - unsupported muon ID/iso combination")
-            '''
+
         elif muonIso==MuonSelection.TIGHT:
             self.muonIsoFct = lambda muon: muon.pfRelIso04_all<0.15
             '''
@@ -249,13 +259,16 @@ class MuonSelection(Module):
             self.out.branch(self.outputName+"_"+variable,"F",lenVar="n"+self.outputName)
             
         if not Module.globalOptions["isData"] and self.storeWeights:
+            self.out.branch(self.outputName+"_weight_reco_nominal","F")
             self.out.branch(self.outputName+"_weight_id_nominal","F")
-            self.out.branch(self.outputName+"_weight_id_up","F")
-            self.out.branch(self.outputName+"_weight_id_down","F")
-            
             self.out.branch(self.outputName+"_weight_iso_nominal","F")
-            self.out.branch(self.outputName+"_weight_iso_up","F")
-            self.out.branch(self.outputName+"_weight_iso_down","F")
+            if self.doVariations:
+                self.out.branch(self.outputName+"_weight_reco_up","F")
+                self.out.branch(self.outputName+"_weight_reco_down","F")
+                self.out.branch(self.outputName+"_weight_id_up","F")
+                self.out.branch(self.outputName+"_weight_id_down","F")
+                self.out.branch(self.outputName+"_weight_iso_up","F")
+                self.out.branch(self.outputName+"_weight_iso_down","F")
         
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -269,13 +282,17 @@ class MuonSelection(Module):
         selectedMuons = []
         unselectedMuons = []
         
+        weight_reco_nominal = 1.
         weight_id_nominal = 1.
-        weight_id_up = 1.
-        weight_id_down = 1.
-
         weight_iso_nominal = 1.
-        weight_iso_up = 1.
-        weight_iso_down = 1.
+
+        if self.doVariations:
+            weight_reco_up = 1.
+            weight_reco_down = 1.
+            weight_id_up = 1.
+            weight_id_down = 1.
+            weight_iso_up = 1.
+            weight_iso_down = 1.
         
         #https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideMuonIdRun2#Tight_Muon
         for muon in muons:
@@ -289,24 +306,49 @@ class MuonSelection(Module):
                 #TODO
                 '''
                 if not Module.globalOptions["isData"] and self.storeWeights:
-                    if Module.globalOptions["year"] == 2016:
+                    if Module.globalOptions["year"] == '2016':
                         weight_id,weight_id_err = getSFXY(self.muonIdSF,muon.eta,muon.pt)
-                    elif Module.globalOptions["year"] == 2017 or Module.globalOptions["year"] == 2018:
+                    elif Module.globalOptions["year"] == '2017' or Module.globalOptions["year"] == '2018':
                         weight_id,weight_id_err = getSFXY(self.muonIdSF,muon.pt, abs(muon.eta))
                         
                     weight_id_nominal *= weight_id
                     weight_id_up *=  weight_id+weight_id_err
                     weight_id_down *= weight_id-weight_id_err
                     
-                    if Module.globalOptions["year"] == 2016:
+                    if Module.globalOptions["year"] == '2016':
                         weight_iso,weight_iso_err = getSFXY(self.muonIsoSF,muon.eta,muon.pt)
-                    elif Module.globalOptions["year"] == 2017 or Module.globalOptions["year"] == 2018:
+                    elif Module.globalOptions["year"] == '2017' or Module.globalOptions["year"] == '2018':
                         weight_iso,weight_iso_err = getSFXY(self.muonIsoSF,muon.pt, abs(muon.eta))
 
                     weight_iso_nominal *= weight_iso
                     weight_iso_up *= weight_iso+weight_iso_err
                     weight_iso_down *= weight_iso-weight_iso_err
                 '''
+                if not Module.globalOptions["isData"] and self.storeWeights:
+                    if Module.globalOptions["year"] == '2017':
+                        weight_reco,weight_reco_err = getSFXY(self.muonRecoSFHist,abs(muon.eta),muon.pt)
+                        weight_id,weight_id_err = getSFXY(self.muonIdSF,abs(muon.eta),muon.pt)
+                        weight_iso,weight_iso_err = getSFXY(self.muonIsoSF,abs(muon.eta),muon.pt)
+
+                    else: #TODO other years (remove if/else)
+                        weight_id = weight_reco = weight_iso = 1
+                        weight_id_err = weight_reco_err = weight_iso_err = 0
+
+                    weight_reco_nominal *= weight_reco
+                    weight_id_nominal *= weight_id
+                    weight_iso_nominal *= weight_iso
+
+                    if self.doVariations:
+                        if self.additionalSyst:
+                            weight_iso_err = (weight_iso_err**2+.005**2)**.5 # additional 0.5% flat uncertainty
+
+                        weight_reco_up *=  weight_reco+weight_reco_err
+                        weight_reco_down *= weight_reco-weight_reco_err
+                        weight_id_up *=  weight_id+weight_id_err
+                        weight_id_down *= weight_id-weight_id_err
+                        weight_iso_up *=  weight_iso+weight_iso_err
+                        weight_iso_down *= weight_iso-weight_iso_err
+
             else:
                 unselectedMuons.append(muon)
 
@@ -316,13 +358,17 @@ class MuonSelection(Module):
             self.out.fillBranch(self.outputName+"_"+variable,map(lambda muon: getattr(muon,variable),selectedMuons))
         
         if not Module.globalOptions["isData"] and self.storeWeights:
+            self.out.fillBranch(self.outputName+"_weight_reco_nominal", weight_reco_nominal)
             self.out.fillBranch(self.outputName+"_weight_id_nominal", weight_id_nominal)
-            self.out.fillBranch(self.outputName+"_weight_id_up", weight_id_up)
-            self.out.fillBranch(self.outputName+"_weight_id_down", weight_id_down)
-            
             self.out.fillBranch(self.outputName+"_weight_iso_nominal", weight_iso_nominal)
-            self.out.fillBranch(self.outputName+"_weight_iso_up", weight_iso_up)
-            self.out.fillBranch(self.outputName+"_weight_iso_down", weight_iso_down)
+
+            if self.doVariations:
+                self.out.fillBranch(self.outputName+"_weight_reco_up", weight_reco_up)
+                self.out.fillBranch(self.outputName+"_weight_reco_down", weight_reco_down)
+                self.out.fillBranch(self.outputName+"_weight_id_up", weight_id_up)
+                self.out.fillBranch(self.outputName+"_weight_id_down", weight_id_down)
+                self.out.fillBranch(self.outputName+"_weight_iso_up", weight_iso_up)
+                self.out.fillBranch(self.outputName+"_weight_iso_down", weight_iso_down)
 
         setattr(event,self.outputName,selectedMuons)
         setattr(event,self.outputName+"_unselected",unselectedMuons)

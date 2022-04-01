@@ -63,15 +63,16 @@ class SingleTopReconstruction(Module):
         self.out.branch(self.outputName+"_ljet_eta_"+self.systName,"F")
 
         if self.isMC:
-            self.out.branch(self.outputName+"_bjet_hadronFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_bjet_partonFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_ljet_hadronFlavour_"+self.systName,"F")
-            self.out.branch(self.outputName+"_ljet_partonFlavour_"+self.systName,"F")
+            self.out.branch(self.outputName+"_bjet_hadronFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_bjet_partonFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_ljet_hadronFlavour_"+self.systName,"I")
+            self.out.branch(self.outputName+"_ljet_partonFlavour_"+self.systName,"I")
         
         if not self.taggerName is None:
+            self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreIndex_"+self.systName,"I")
+            self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreValue_"+self.systName,"F")
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.branch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
-                self.out.branch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,"F")
 
         
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -175,9 +176,11 @@ class SingleTopReconstruction(Module):
             self.out.fillBranch(self.outputName+"_ljet_partonFlavour_"+self.systName, getattr(ljet,"partonFlavour"))
 
         if not self.taggerName is None:
+            self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreIndex_"+self.systName,
+                                Module.taggerLabels[self.taggerName].index(max(getattr(bjet,self.taggerName), key = lambda k: getattr(bjet,self.taggerName)[k])))
+            self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_highestScoreValue_"+self.systName,max(getattr(bjet,self.taggerName).values()))
             for label in Module.taggerLabels[self.taggerName]:
                 self.out.fillBranch(self.outputName+"_bjet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(bjet,self.taggerName)[label])
-                self.out.fillBranch(self.outputName+"_ljet_"+self.taggerName+"_"+label+"_"+self.systName,getattr(ljet,self.taggerName)[label])
 
         
         return True
