@@ -71,7 +71,7 @@ class puWeightProducer(Module):
     def endJob(self):
         if len(self.weights) > 0 and np.array(self.weights).std() > 0:
             if abs(np.array(self.weights).mean()-1)/np.array(self.weights).std() > 5:
-                raise ValueError('average PU weight more than 5 standard deviations away from 1')
+                print 'WARNING: average PU weight more than 5 standard deviations away from 1'
 
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -171,12 +171,12 @@ pufile_dataUL2016 = "%s/src/PhysicsTools/NanoAODTools/data/pileup/PileupHistogra
     'CMSSW_BASE']
 pufile_mcUL2016 = "%s/src/PhysicsTools/NanoAODTools/data/pileup/mcPileupUL2016.root" % os.environ[
     'CMSSW_BASE']
-puWeight_UL2016 = lambda: puWeightProducer(pufile_mcUL2016,
-                                           pufile_dataUL2016,
-                                           "pu_mc",
-                                           "pileup",
-                                           verbose=False,
-                                           doSysVar=True)
+puWeight_UL2016 = lambda doSysVar: puWeightProducer(pufile_mcUL2016,
+                                                    pufile_dataUL2016,
+                                                    "pu_mc",
+                                                    "pileup",
+                                                    verbose=False,
+                                                    doSysVar=doSysVar)
 puAutoWeight_UL2016 = lambda: puWeightProducer(
     "auto", pufile_dataUL2016, "pu_mc", "pileup", verbose=False)
 
@@ -185,12 +185,12 @@ pufile_dataUL2017 = "%s/src/PhysicsTools/NanoAODTools/data/pileup/PileupHistogra
     'CMSSW_BASE']
 pufile_mcUL2017 = "%s/src/PhysicsTools/NanoAODTools/data/pileup/mcPileupUL2017.root" % os.environ[
     'CMSSW_BASE']
-puWeight_UL2017 = lambda: puWeightProducer(pufile_mcUL2017,
-                                           pufile_dataUL2017,
-                                           "pu_mc",
-                                           "pileup",
-                                           verbose=False,
-                                           doSysVar=True)
+puWeight_UL2017 = lambda doSysVar: puWeightProducer(pufile_mcUL2017,
+                                                    pufile_dataUL2017,
+                                                    "pu_mc",
+                                                    "pileup",
+                                                    verbose=False,
+                                                    doSysVar=doSysVar)
 puAutoWeight_UL2017 = lambda: puWeightProducer(
     "auto", pufile_dataUL2017, "pu_mc", "pileup", verbose=False)
 
@@ -199,12 +199,12 @@ pufile_dataUL2018 = "%s/src/PhysicsTools/NanoAODTools/data/pileup/PileupHistogra
     'CMSSW_BASE']
 pufile_mcUL2018 = "%s/src/PhysicsTools/NanoAODTools/data/pileup/mcPileupUL2018.root" % os.environ[
     'CMSSW_BASE']
-puWeight_UL2018 = lambda: puWeightProducer(pufile_mcUL2018,
-                                           pufile_dataUL2018,
-                                           "pu_mc",
-                                           "pileup",
-                                           verbose=False,
-                                           doSysVar=True)
+puWeight_UL2018 = lambda doSysVar: puWeightProducer(pufile_mcUL2018,
+                                                    pufile_dataUL2018,
+                                                    "pu_mc",
+                                                    "pileup",
+                                                    verbose=False,
+                                                    doSysVar=doSysVar)
 puAutoWeight_UL2018 = lambda: puWeightProducer(
     "auto", pufile_dataUL2018, "pu_mc", "pileup", verbose=False)
 

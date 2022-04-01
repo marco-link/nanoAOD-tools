@@ -41,6 +41,8 @@ class MetFilter(Module):
             return False
         if event.Flag_BadPFMuonFilter==0:
             return False
+        if event.Flag_BadPFMuonDzFilter==0:
+            return False
         if self.globalOptions["isData"] and event.Flag_eeBadScFilter==0: #not suggested on MC
             return False
         if event.Flag_ecalBadCalibFilter == 0:
