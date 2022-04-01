@@ -39,9 +39,9 @@ parser.add_argument('--crab', dest='crab', action='store_true', default=False)
 args = parser.parse_args()
 print(args)
 
-inputFiles = args.inputFiles
+inputfiles = args.inputFiles
 if args.crab:
-    inputFiles = inputFiles()
+    inputfiles = inputFiles()
 
 print "isData:",args.isData
 print "isSignal:",args.isSignal
@@ -49,7 +49,7 @@ print "ntags:",args.ntags
 print "evaluate systematics:",not args.nosys
 print "evaluate tagger:",not args.notagger
 print "invert lepton id/iso:",args.invid
-print "inputs:",len(inputFiles)
+print "inputs:",len(inputfiles)
 print "year:", args.year
 print "output directory:", args.output
 if args.maxEvents:
@@ -71,14 +71,14 @@ globalOptions = {
 Module.globalOptions = globalOptions
 
 isMC = not args.isData
-isPowheg = 'powheg' in inputFiles[0].lower()
-isPowhegTTbar = 'TTTo' in inputFiles[0] and isPowheg
-isST = 'ST_' in inputFiles[0]
-isWjets = 'WJetsToLNu_' in inputFiles[0]
+isPowheg = 'powheg' in inputfiles[0].lower()
+isPowhegTTbar = 'TTTo' in inputfiles[0] and isPowheg
+isST = 'ST_' in inputfiles[0]
+isWjets = 'WJetsToLNu_' in inputfiles[0]
 saveGenWeights = args.isSignal or isPowhegTTbar or isST or isWjets
 
 nPDF_weights = 103
-if args.isSignal or (isST and not 'ST_t-channel_' in inputFiles[0]):
+if args.isSignal or (isST and not 'ST_t-channel_' in inputfiles[0]):
     nPDF_weights = 101
 
 minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
@@ -439,7 +439,7 @@ if not globalOptions["isData"]:
 
 p = PostProcessor(
     args.output,
-    inputFiles,
+    inputfiles,
     cut="(nJet>1)&&((nElectron+nMuon)>0)",
     modules=analyzerChain,
     friend=False,
