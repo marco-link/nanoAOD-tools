@@ -141,6 +141,7 @@ def leptonSequence():
             electronMaxEta = 2.4,
             storeKinematics=['pt','eta','charge'],
             storeWeights=True,
+            doVariations = not args.nosys,
         ),
         SingleElectronTriggerSelection(
             inputCollection=lambda event: event.tightElectrons,
