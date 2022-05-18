@@ -24,21 +24,18 @@ class SingleMuonTriggerSelection(Module):
         self.doVariations = doVariations
 
         if not Module.globalOptions["isData"]:
-            if Module.globalOptions["year"] == '2016' or Module.globalOptions["year"] == '2016preVFP':
+            if Module.globalOptions["year"] == '2016':
 
-                triggerSFBToF = getHist(
-                    "PhysicsTools/NanoAODTools/data/muon/2016/EfficienciesAndSF_RunBtoF.root",
-                    "IsoMu24_OR_IsoTkMu24_PtEtaBins/pt_abseta_ratio"
+                self.triggerSFHist = getHist(
+                    "PhysicsTools/NanoAODTools/data/muon/2016postVFP_UL/NUM_IsoMu24_or_IsoTkMu24_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt.root",
+                    "NUM_IsoMu24_or_IsoTkMu24_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt_syst"
                 )
-                triggerSFGToH = getHist(
-                    "PhysicsTools/NanoAODTools/data/muon/2016/EfficienciesAndSF_RunGtoH.root",
-                    "IsoMu24_OR_IsoTkMu24_PtEtaBins/pt_abseta_ratio"
-                )
-                self.triggerSFHist = combineHist2D(
-                    triggerSFBToF,
-                    triggerSFGToH,
-                    1.-16226.5/35916.4,
-                    16226.5/35916.4
+
+            elif Module.globalOptions["year"] == '2016preVFP':
+
+                self.triggerSFHist = getHist(
+                    "PhysicsTools/NanoAODTools/data/muon/2016preVFP_UL/NUM_IsoMu24_or_IsoTkMu24_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt.root",
+                    "NUM_IsoMu24_or_IsoTkMu24_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt_syst"
                 )
 
             elif Module.globalOptions["year"] == '2017':
@@ -51,8 +48,8 @@ class SingleMuonTriggerSelection(Module):
             elif Module.globalOptions["year"] == '2018':
 
                 self.triggerSFHist = getHist(
-                    "PhysicsTools/NanoAODTools/data/muon/2018/EfficienciesStudies_2018_trigger_EfficienciesAndSF_2018Data_AfterMuonHLTUpdate.root",
-                    "IsoMu24_PtEtaBins/pt_abseta_ratio"
+                    "PhysicsTools/NanoAODTools/data/muon/2018_UL/NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt.root",
+                    "NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoVeryTight_abseta_pt_syst"
                 )
             else: 
                 print("Invalid year")
