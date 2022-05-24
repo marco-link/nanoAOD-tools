@@ -4,6 +4,10 @@
 
 Tests (2017 only!) are defined in [test/runCMSSWTest_2017.sh](https://github.com/WbWbX/nanoAOD-tools/blob/wbwbxUL/test/runCMSSWTest_2017.sh)
 
+## Produced samples
+
+[https://codimd.web.cern.ch/Rcy3Mtt-TS6qVGFaFhcTaA#](https://codimd.web.cern.ch/Rcy3Mtt-TS6qVGFaFhcTaA#)
+
 ## Checkout instructions: CMSSW_11_1_7
 
 ```
