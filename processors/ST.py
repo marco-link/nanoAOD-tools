@@ -81,7 +81,7 @@ nPDF_weights = 103
 if args.isSignal or (isST and not 'ST_t-channel_' in inputfiles[0]):
     nPDF_weights = 101
 
-minMuonPt =     {'2016': 25., '2016preVFP': 25., '2017': 28., '2018': 25.}
+minMuonPt =     {'2016': 26., '2016preVFP': 26., '2017': 28., '2018': 26.}
 minElectronPt = {'2016': 29., '2016preVFP': 29., '2017': 34., '2018': 34.}
 
 jesUncertaintyFilesRegrouped = {
@@ -141,6 +141,7 @@ def leptonSequence():
             electronMaxEta = 2.4,
             storeKinematics=['pt','eta','charge'],
             storeWeights=True,
+            doVariations = not args.nosys,
         ),
         SingleElectronTriggerSelection(
             inputCollection=lambda event: event.tightElectrons,

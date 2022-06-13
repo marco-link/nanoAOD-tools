@@ -27,6 +27,7 @@ class ElectronSelection(Module):
         electronMaxEta = 2.4,
         storeKinematics=['pt','eta'],
         storeWeights=False,
+        doVariations=True,
     ):
 
         self.inputCollection = inputCollection
@@ -36,23 +37,88 @@ class ElectronSelection(Module):
         self.storeKinematics = storeKinematics
         self.storeWeights = storeWeights
         self.triggerMatch = triggerMatch
+        self.doVariations = doVariations
         
         self.triggerObjectCollection = lambda event: Collection(event, "TrigObj") if triggerMatch else lambda event: []
 
+        if Module.globalOptions["year"] == '2016preVFP':
+
+            self.WP90SFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL16preVFP/egammaEffi.txt_Ele_wp90iso_preVFP_EGM2D.root",
+                "EGamma_SF2D"
+            )
+            self.WP80SFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL16preVFP/egammaEffi.txt_Ele_wp80iso_preVFP_EGM2D.root",
+                "EGamma_SF2D"
+            )
+            self.electronRecoSFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL16preVFP/egammaEffi_ptAbove20.txt_EGM2D_UL2016preVFP.root",
+                "EGamma_SF2D"
+            )
+
+        elif Module.globalOptions["year"] == '2016':
+
+            self.WP90SFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL16postVFP/egammaEffi.txt_Ele_wp90iso_postVFP_EGM2D.root",
+                "EGamma_SF2D"
+            )
+            self.WP80SFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL16postVFP/egammaEffi.txt_Ele_wp80iso_postVFP_EGM2D.root",
+                "EGamma_SF2D"
+            )
+            self.electronRecoSFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL16postVFP/egammaEffi_ptAbove20.txt_EGM2D_UL2016postVFP.root",
+                "EGamma_SF2D"
+            )
+
+        elif Module.globalOptions["year"] == '2017':
+
+            self.WP90SFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL17/egammaEffi.txt_EGM2D_MVA90iso_UL17.root",
+                "EGamma_SF2D"
+            )
+            self.WP80SFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL17/egammaEffi.txt_EGM2D_MVA80iso_UL17.root",
+                "EGamma_SF2D"
+            )
+            self.electronRecoSFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL17/egammaEffi_ptAbove20.txt_EGM2D_UL2017.root",
+                "EGamma_SF2D"
+            )
+
+        elif Module.globalOptions["year"] == '2018':
+
+            self.WP90SFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL18/egammaEffi.txt_Ele_wp90iso_EGM2D.root",
+                "EGamma_SF2D"
+            )
+            self.WP80SFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL18/egammaEffi.txt_Ele_wp80iso_EGM2D.root",
+                "EGamma_SF2D"
+            )
+            self.electronRecoSFHist = getHist(
+                "PhysicsTools/NanoAODTools/data/electrons/UL18/egammaEffi_ptAbove20.txt_EGM2D_UL2018.root",
+                "EGamma_SF2D"
+            )
+        else:
+            raise Exception("Error - invalid year for muon efficiencies")
+
         if electronID == ElectronSelection.WP90:
             self.electronID = lambda electron: electron.mvaFall17V2Iso_WP90==1
+            self.electronIdSF = self.WP90SFHist
         elif electronID == ElectronSelection.WP80:
             self.electronID = lambda electron: electron.mvaFall17V2Iso_WP80==1
+            self.electronIdSF = self.WP80SFHist
         elif electronID == ElectronSelection.INV: 
             self.electronID = lambda electron: electron.mvaFall17V2Iso_WP80==0
+            self.storeWeights = False
         elif electronID == ElectronSelection.NONE:
             self.storeWeights = False
             self.electronID = lambda electron: True
         else:
             raise Exception("Electron ID undefined")
 
-        #TODO: save the reco/ID weights if storeWeights==True
-        
+
 
     def triggerMatched(self, electron, trigger_object):
         if self.triggerMatch:
@@ -79,12 +145,13 @@ class ElectronSelection(Module):
         self.out.branch("n"+self.outputName, "I")
         if not Module.globalOptions["isData"] and self.storeWeights:
             self.out.branch(self.outputName+"_weight_reco_nominal","F")
-            self.out.branch(self.outputName+"_weight_reco_up","F")
-            self.out.branch(self.outputName+"_weight_reco_down","F")
-
             self.out.branch(self.outputName+"_weight_id_nominal","F")
-            self.out.branch(self.outputName+"_weight_id_up","F")
-            self.out.branch(self.outputName+"_weight_id_down","F")
+
+            if self.doVariations:
+                self.out.branch(self.outputName+"_weight_reco_up","F")
+                self.out.branch(self.outputName+"_weight_reco_down","F")
+                self.out.branch(self.outputName+"_weight_id_up","F")
+                self.out.branch(self.outputName+"_weight_id_down","F")
 
         for variable in self.storeKinematics:
             self.out.branch(self.outputName+"_"+variable,"F",lenVar="n"+self.outputName)
@@ -103,12 +170,13 @@ class ElectronSelection(Module):
         unselectedElectrons = []
         
         weight_reco_nominal = 1.
-        weight_reco_up = 1.
-        weight_reco_down = 1.
-
         weight_id_nominal = 1.
-        weight_id_up = 1.
-        weight_id_down = 1.
+
+        if self.doVariations:
+            weight_reco_up = 1.
+            weight_reco_down = 1.
+            weight_id_up = 1.
+            weight_id_down = 1.
 
         for electron in electrons:
             # https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedElectronIdentificationRun2
@@ -136,8 +204,19 @@ class ElectronSelection(Module):
 
                 selectedElectrons.append(electron)
                 
-                #TODO: electron reco/ID SFs
-                
+                if not Module.globalOptions["isData"] and self.storeWeights:
+
+                    weight_reco,weight_reco_err = getSFXY(self.electronRecoSFHist,electron.eta,electron.pt)
+                    weight_id,weight_id_err = getSFXY(self.electronIdSF,electron.eta,electron.pt)
+
+                    weight_reco_nominal *= weight_reco
+                    weight_id_nominal *= weight_id
+
+                    if self.doVariations:
+                        weight_reco_up *=  weight_reco+weight_reco_err
+                        weight_reco_down *= weight_reco-weight_reco_err
+                        weight_id_up *=  weight_id+weight_id_err
+                        weight_id_down *= weight_id-weight_id_err
                 
             else:
                 unselectedElectrons.append(electron)
@@ -146,12 +225,13 @@ class ElectronSelection(Module):
         if not Module.globalOptions["isData"] and self.storeWeights:
             
             self.out.fillBranch(self.outputName+"_weight_reco_nominal", weight_reco_nominal)
-            self.out.fillBranch(self.outputName+"_weight_reco_up", weight_reco_up)
-            self.out.fillBranch(self.outputName+"_weight_reco_down", weight_reco_down)
-
             self.out.fillBranch(self.outputName+"_weight_id_nominal",weight_id_nominal)
-            self.out.fillBranch(self.outputName+"_weight_id_up",weight_id_up)
-            self.out.fillBranch(self.outputName+"_weight_id_down",weight_id_down)
+
+            if self.doVariations:
+                self.out.fillBranch(self.outputName+"_weight_reco_up", weight_reco_up)
+                self.out.fillBranch(self.outputName+"_weight_reco_down", weight_reco_down)
+                self.out.fillBranch(self.outputName+"_weight_id_up",weight_id_up)
+                self.out.fillBranch(self.outputName+"_weight_id_down",weight_id_down)
 
         self.out.fillBranch("n"+self.outputName,len(selectedElectrons))
 
