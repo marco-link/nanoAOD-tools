@@ -17,16 +17,16 @@ function run_test()
     echo
 
     echo "==================== signal 2017 ====================="
-    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isSignal --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/nanox_2022-05-27_v9/2017_test_WbjToLNu.root || return 1
+    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isSignal --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/nanox_2022-05-27_v9/WbjToLNu_4f_TuneCP5_13TeV-madgraph-pythia8.root || return 1
     echo
     echo "==================== semileptonic ttbar 2017 ====================="
-    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/nanox_2022-05-27_v9/2017_test_TTToSemiLeptonic.root || return 1
+    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/nanox_2022-05-27_v9/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.root || return 1
     echo
     echo "==================== single muon 2017 ====================="
-    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isData --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/nanox_2022-05-27_v9/2017_test_SingleMuon.root || return 1
+    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isData --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/nanox_2022-03-01_v6/2017_test_SingleMuon.root || return 1
     echo
     echo "==================== single electron 2017 ====================="
-    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isData --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/nanox_2022-05-27_v9/2017_test_SingleElectron.root || return 1
+    python PhysicsTools/NanoAODTools/processors/ST.py --year 2017 --ntags -1 --isData --maxEvents 1000 --input=https://github.com/WbWbX/test-files/raw/main/nanox_2022-03-01_v6/2017_test_SingleElectron.root || return 1
     echo
     echo "==================== done ====================="
 }
