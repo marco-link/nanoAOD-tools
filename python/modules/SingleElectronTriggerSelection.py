@@ -16,47 +16,39 @@ class SingleElectronTriggerSelection(Module):
         inputCollection = lambda event: getattr(event,"tightElectron"),
         storeWeights=False,
         outputName = "IsoElectronTrigger",
+        doVariations = True
     ):
         self.inputCollection = inputCollection
         self.outputName = outputName
         self.storeWeights = storeWeights
+        self.doVariations = doVariations
 
-        '''
+
         if not self.globalOptions["isData"]:
-            if self.globalOptions["year"] == 2016:
+            if self.globalOptions["year"] == 2016 or self.globalOptions["year"] == '2016preVFP'::
 
-                triggerSFBToF = getHist(
-                    "PhysicsTools/NanoAODTools/data/muon/2016/EfficienciesAndSF_RunBtoF.root",
-                    "IsoMu24_OR_IsoTkMu24_PtEtaBins/pt_abseta_ratio"
-                )
-                triggerSFGToH = getHist(
-                    "PhysicsTools/NanoAODTools/data/muon/2016/EfficienciesAndSF_RunGtoH.root",
-                    "IsoMu24_OR_IsoTkMu24_PtEtaBins/pt_abseta_ratio"
-                )
-                self.triggerSFHist = combineHist2D(
-                    triggerSFBToF,
-                    triggerSFGToH,
-                    1.-16226.5/35916.4,
-                    16226.5/35916.4
+                triggerSF = getHist(
+                    "PhysicsTools/NanoAODTools/data/electrons/trigger/Efficiencies_electron_DL_Run2016BCDEFGH_UL_SingleElectronTrigger.root",
+                    "NUM_Ele27_WPTight_DEN_MVA90Id_eta_pt_syst"
                 )
 
             elif self.globalOptions["year"] == 2017:
 
                 self.triggerSFHist = getHist(
-                    "PhysicsTools/NanoAODTools/data/muon/2017/EfficienciesStudies_2017_trigger_EfficienciesAndSF_RunBtoF_Nov17Nov2017.root",
-                    "IsoMu27_PtEtaBins/pt_abseta_ratio"
+                    "PhysicsTools/NanoAODTools/data/electrons/trigger/Efficiencies_electron_DL_Run2017BCDEF_UL_SingleElectronTrigger.root",
+                    "NUM_Ele32_WPTight_L1DoubleEG_DEN_MVA90Id_eta_pt_syst"
                 )
    
             elif self.globalOptions["year"] == 2018:
 
                 self.triggerSFHist = getHist(
-                    "PhysicsTools/NanoAODTools/data/muon/2018/EfficienciesStudies_2018_trigger_EfficienciesAndSF_2018Data_AfterMuonHLTUpdate.root",
-                    "IsoMu24_PtEtaBins/pt_abseta_ratio"
+                    "PhysicsTools/NanoAODTools/data/electrons/trigger/Efficiencies_electron_DL_Run2018ABCD_UL_SingleElectronTrigger.root",
+                    "NUM_Ele32_WPTight_DEN_MVA90Id_eta_pt_syst"
                 )
             else: 
                 print("Invalid year")
                 sys.exit(1)
-        '''
+
 
             
     def beginJob(self):
@@ -72,8 +64,9 @@ class SingleElectronTriggerSelection(Module):
         
         if not Module.globalOptions["isData"] and self.storeWeights:
             self.out.branch(self.outputName+"_weight_trigger_{}_nominal".format(Module.globalOptions['year'].replace('preVFP','')),"F")
-            self.out.branch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),"F")
-            self.out.branch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),"F")
+            if self.doVariations:
+                self.out.branch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),"F")
+                self.out.branch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),"F")
             
         
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -84,16 +77,18 @@ class SingleElectronTriggerSelection(Module):
         electrons = self.inputCollection(event)
         
         weight_trigger_nominal = 1.
-        weight_trigger_up = 1.
-        weight_trigger_down = 1.
+        if self.doVariations:
+            weight_trigger_up = 1.
+            weight_trigger_down = 1.
         
-        '''
+
         if (not self.globalOptions["isData"]) and len(electrons)>0 and self.storeWeights: 
-            weight_trigger,weight_trigger_err = getSFXY(self.triggerSFHist,muons[0].pt,abs(muons[0].eta))
+            weight_trigger,weight_trigger_err = getSFXY(self.triggerSFHist,electrons[0].pt,electrons[0].eta)
             weight_trigger_nominal*=weight_trigger
-            weight_trigger_up*=(weight_trigger+weight_trigger_err)
-            weight_trigger_down*=(weight_trigger-weight_trigger_err)
-        '''
+            if self.doVariation:
+                weight_trigger_up*=(weight_trigger+weight_trigger_err)
+                weight_trigger_down*=(weight_trigger-weight_trigger_err)
+
 
         trigger_flag = 0
 
@@ -110,8 +105,9 @@ class SingleElectronTriggerSelection(Module):
             
         if not Module.globalOptions["isData"] and self.storeWeights:
             self.out.fillBranch(self.outputName+"_weight_trigger_{}_nominal".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_nominal)
-            self.out.fillBranch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_up)
-            self.out.fillBranch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_down)
+            if self.doVariations:
+                self.out.fillBranch(self.outputName+"_weight_trigger_{}_up".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_up)
+                self.out.fillBranch(self.outputName+"_weight_trigger_{}_down".format(Module.globalOptions['year'].replace('preVFP','')),weight_trigger_down)
 
         return True
         
