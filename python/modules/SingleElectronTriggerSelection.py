@@ -25,21 +25,21 @@ class SingleElectronTriggerSelection(Module):
 
 
         if not self.globalOptions["isData"]:
-            if self.globalOptions["year"] == 2016 or self.globalOptions["year"] == '2016preVFP'::
+            if self.globalOptions["year"] == '2016' or self.globalOptions["year"] == '2016preVFP':
 
-                triggerSF = getHist(
+                self.triggerSFHist = getHist(
                     "PhysicsTools/NanoAODTools/data/electrons/trigger/Efficiencies_electron_DL_Run2016BCDEFGH_UL_SingleElectronTrigger.root",
                     "NUM_Ele27_WPTight_DEN_MVA90Id_eta_pt_syst"
                 )
 
-            elif self.globalOptions["year"] == 2017:
+            elif self.globalOptions["year"] == '2017':
 
                 self.triggerSFHist = getHist(
                     "PhysicsTools/NanoAODTools/data/electrons/trigger/Efficiencies_electron_DL_Run2017BCDEF_UL_SingleElectronTrigger.root",
                     "NUM_Ele32_WPTight_L1DoubleEG_DEN_MVA90Id_eta_pt_syst"
                 )
    
-            elif self.globalOptions["year"] == 2018:
+            elif self.globalOptions["year"] == '2018':
 
                 self.triggerSFHist = getHist(
                     "PhysicsTools/NanoAODTools/data/electrons/trigger/Efficiencies_electron_DL_Run2018ABCD_UL_SingleElectronTrigger.root",
