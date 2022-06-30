@@ -28,7 +28,7 @@ keep selectedBJets_*
 
 # weights
 keep PDFweight_*
-keep LHEWeights_width_*
+keep LHEWeight_width_*
 keep puWeight*
 keep btagEventWeight_*
 keep genweight

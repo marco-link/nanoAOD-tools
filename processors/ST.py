@@ -431,8 +431,8 @@ if not globalOptions["isData"]:
     if args.isSignal:
         for coupling in range(1,106):
             storeVariables.append([
-                lambda tree, coupling=coupling: tree.branch('LHEWeights_width_%i'%coupling,'F'),
-                lambda tree, event, coupling=coupling: tree.fillBranch('LHEWeights_width_%i'%coupling,getattr(event,"LHEWeights_width_%i"%coupling)),
+                lambda tree, coupling=coupling: tree.branch('LHEWeight_width_%i'%coupling,'F'),
+                lambda tree, event, coupling=coupling: tree.fillBranch('LHEWeight_width_%i'%coupling,getattr(event,"LHEWeight_width_%i"%coupling)),
             ])
             
     analyzerChain.append(EventInfo(storeVariables=storeVariables))
