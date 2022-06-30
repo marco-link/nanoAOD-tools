@@ -35,6 +35,13 @@ else
                 opt_isSignal=""
             fi
         ;;
+        isData=*)
+            if [ "${i#*=}" -gt "0" ]; then
+                opt_isData="--isData"
+            else
+                opt_isData=""
+            fi
+        ;;
         year=*)
             opt_year="${i#*=}"
         ;;
@@ -45,7 +52,7 @@ else
     done
 
     echo "---> python ST.py"
-    python ST.py --crab $opt_isSignal --year $opt_year --ntags $opt_ntags
+    python ST.py --crab $opt_isSignal $opt_isData --year $opt_year --ntags $opt_ntags
     ls -lv
     echo "DONE with crab_script.sh"
 fi

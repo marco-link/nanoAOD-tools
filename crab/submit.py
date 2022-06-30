@@ -54,7 +54,7 @@ config.JobType.psetName = 'PSet.py'
 config.JobType.inputFiles = ['../processors/ST.py', '../processors/branchfilter.txt', '../scripts/haddnano.py']
 config.JobType.scriptExe = 'crab_script.sh'
 config.JobType.maxMemoryMB = 2500
-config.JobType.maxJobRuntimeMin = 300
+config.JobType.maxJobRuntimeMin = 800
 config.JobType.outputFiles = ['nano.root']
 config.JobType.sendPythonFolder = True
 config.JobType.allowUndistributedCMSSW = True
@@ -94,8 +94,11 @@ with open(args.input, 'r') as samplefile:
 
             config.General.requestName = requestName
             config.Data.inputDataset = sample
-            config.JobType.scriptArgs = ['year={}'.format(year), 'isSignal={}'.format(1 if 'WbjToLNu_4f' in requestName else 0), 'ntags=-1']
-            config.Data.outLFNDirBase = '/store/user/mlink/WbNanoAODTools/{}/'.format(args.version)
+            config.JobType.scriptArgs = ['year={}'.format(year),
+                                         'isSignal={}'.format(1 if 'WbjToLNu_4f' in requestName else 0),
+                                         'isData={}'.format(1 if args.data else 0),
+                                         'ntags=-1']
+            config.Data.outLFNDirBase = '/store/user/mlink/WbNanoAODTools/{}/{}'.format(args.version, year)
 
             # save config
             with open('{}_{}.py'.format(year, requestName), 'w') as f:
