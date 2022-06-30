@@ -85,7 +85,7 @@ class SingleElectronTriggerSelection(Module):
         if (not self.globalOptions["isData"]) and len(electrons)>0 and self.storeWeights: 
             weight_trigger,weight_trigger_err = getSFXY(self.triggerSFHist,electrons[0].pt,electrons[0].eta)
             weight_trigger_nominal*=weight_trigger
-            if self.doVariation:
+            if self.doVariations:
                 weight_trigger_up*=(weight_trigger+weight_trigger_err)
                 weight_trigger_down*=(weight_trigger-weight_trigger_err)
 
