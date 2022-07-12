@@ -61,6 +61,8 @@ class SingleTopReconstruction(Module):
         self.out.branch(self.outputName+"_bjet_eta_"+self.systName,"F")
         self.out.branch(self.outputName+"_ljet_pt_"+self.systName,"F")
         self.out.branch(self.outputName+"_ljet_eta_"+self.systName,"F")
+        self.out.branch(self.outputName+"_lepton_pt_"+self.systName,"F")
+        self.out.branch(self.outputName+"_lepton_eta_"+self.systName,"F") 
 
         if self.isMC:
             self.out.branch(self.outputName+"_bjet_hadronFlavour_"+self.systName,"I")
@@ -168,6 +170,8 @@ class SingleTopReconstruction(Module):
         self.out.fillBranch(self.outputName+"_bjet_eta_"+self.systName, bjet.eta)
         self.out.fillBranch(self.outputName+"_ljet_pt_"+self.systName, ljet.pt)
         self.out.fillBranch(self.outputName+"_ljet_eta_"+self.systName, ljet.eta)
+        self.out.fillBranch(self.outputName+"_lepton_pt_"+self.systName, lepton.pt)
+        self.out.fillBranch(self.outputName+"_lepton_eta_"+self.systName, lepton.eta)
 
         if self.isMC:
             self.out.fillBranch(self.outputName+"_bjet_hadronFlavour_"+self.systName, getattr(bjet,"hadronFlavour"))
