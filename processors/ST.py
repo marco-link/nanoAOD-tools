@@ -147,6 +147,7 @@ def leptonSequence():
             inputCollection=lambda event: event.tightElectrons,
             outputName="IsoElectronTrigger",
             storeWeights=True,
+            doVariations=not args.nosys,
         ),
         ElectronVeto(
             inputCollection=lambda event: event.tightElectrons_unselected,
