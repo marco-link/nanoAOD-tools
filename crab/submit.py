@@ -31,10 +31,6 @@ parser.add_argument('--version', '-v', type=str, required=True,
 parser.add_argument('--dry', action='store_true',
                     help='only generate configs, don\'t submit the jobs')
 
-parser.add_argument('--data', action='store_true',
-                    help='for data processing')
-
-
 args = parser.parse_args()
 print(args)
 
@@ -69,7 +65,6 @@ config.Data.outputDatasetTag = 'WbNanoAODTools_{}'.format(args.version)
 config.Data.allowNonValidInputDataset = False
 
 config.section_("Site")
-config.Site.storageSite = 'T1_DE_KIT_Disk'
 #config.Site.blacklist = ['T2_US_*']
 
 config.section_("User")
@@ -96,9 +91,14 @@ with open(args.input, 'r') as samplefile:
             config.Data.inputDataset = sample
             config.JobType.scriptArgs = ['year={}'.format(year),
                                          'isSignal={}'.format(1 if 'WbjToLNu_4f' in requestName else 0),
-                                         'isData={}'.format(1 if args.data else 0),
+                                         'isData={}'.format(1 if 'SingleMuon' in requestName or 'SingleElectron' in requestName else 0),
                                          'ntags=-1']
-            config.Data.outLFNDirBase = '/store/user/mlink/WbNanoAODTools/{}/{}'.format(args.version, year)
+
+            #config.Site.storageSite = 'T1_DE_KIT_Disk'
+            #config.Data.outLFNDirBase = '/store/user/mlink/WbNanoAODTools/{}/{}'.format(args.version, year)
+
+            config.Site.storageSite = 'T2_CH_CERN'
+            config.Data.outLFNDirBase = '/store/group/cmst3/group/top/WbWb/WbNanoAODTools/{}/{}'.format(args.version, year)
 
             # save config
             with open('{}_{}.py'.format(year, requestName), 'w') as f:
