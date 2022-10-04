@@ -25,7 +25,7 @@ class ElectronSelection(Module):
         electronID = WP80,
         electronMinPt = 29.,
         electronMaxEta = 2.4,
-        storeKinematics=['pt','eta'],
+        storeKinematics=['pt','eta', 'dxy', 'dz'],
         storeWeights=False,
         doVariations=True,
     ):

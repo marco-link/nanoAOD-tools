@@ -27,7 +27,7 @@ class MuonSelection(Module):
         muonIso=TIGHT,
         muonMinPt=25.,
         muonMaxEta=2.4,
-        storeKinematics=['pt','eta'],
+        storeKinematics=['pt','eta', 'pfRelIso04_all', 'tightId'],
         storeWeights=False,
         doVariations=True,
         additionalSyst=False,
