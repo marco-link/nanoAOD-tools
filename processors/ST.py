@@ -109,7 +109,7 @@ def leptonSequence():
         MuonSelection(
             inputCollection=lambda event: Collection(event, "Muon"),
             outputName="tightMuons",
-            storeKinematics=['pt','eta','charge', 'pfRelIso04_all', 'tightId'],
+            storeKinematics=['pt','eta', 'phi', 'charge', 'pfRelIso04_all', 'tightId'],
             storeWeights=True,
             muonMinPt=minMuonPt[args.year],
             muonMaxEta=2.4,
@@ -139,7 +139,7 @@ def leptonSequence():
             electronID = ElectronSelection.INV if args.invid else ElectronSelection.WP90,
             electronMinPt = minElectronPt[args.year],
             electronMaxEta = 2.4,
-            storeKinematics=['pt','eta','charge', 'dxy', 'dz'],
+            storeKinematics=['pt','eta', 'phi', 'charge', 'dxy', 'dz'],
             storeWeights=True,
             doVariations = not args.nosys,
         ),
@@ -175,6 +175,7 @@ def jetSelection(jetDict):
                 jetMaxEta=4.7,
                 dRCleaning=0.4,
                 jetId=JetSelection.TIGHT,
+                storeKinematics=['pt', 'eta', 'phi'],
                 outputName="selectedJets_"+systName,
             )
         )
@@ -184,6 +185,7 @@ def jetSelection(jetDict):
             BTagSelection(
                 inputCollection=lambda event,sys=systName: getattr(event,"selectedJets_"+sys),
                 flagName="isBTagged",
+                storeKinematics=['pt', 'eta', 'phi'],
                 outputName="selectedBJets_"+systName,
                 jetMinPt=30.,
                 jetMaxEta=2.4,
